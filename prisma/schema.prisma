@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model UserSettings {
+  id          String   @id @default(cuid())
+  userId      String   @unique // Clerk user ID
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Surgery Details
+  surgeryDate     DateTime
+  knee            String    // "left" or "right"
+  graftType       String
+  weightBearing   String    // "weight-bearing" or "non-weight-bearing"
+  favoriteSport   String?
+  about           String?   @db.Text
+
+  // Relation to journal entries
+  journalEntries JournalEntry[]
+}
+
+model JournalEntry {
+  id        String   @id @default(cuid())
+  userId    String   // Clerk user ID
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  date      DateTime // The date this entry is for
+
+  // Physical Status
+  emotion       Int?     // 0-4 for the emoji scale
+  energyLevel   Int?     // 0-5 scale
+  painLevel     Int?     // 0-5 scale
+  swelling      String?  // "none", "mild", "moderate", "severe"
+  kneeFlexion   String?
+  kneeExtension String?
+
+  // Rehab Progress
+  rehabTasks    RehabTask[] // Relation to rehab tasks
+  dailyFocus    String?     @db.Text
+  selfCare      String?     @db.Text
+
+  // Wins and Reflections
+  wins              Win[]    // Relation to wins
+  biggestChallenge  String?  @db.Text
+  lessonLearned     String?  @db.Text
+  improvement       String?  @db.Text
+
+  // Game Plan
+  morningPlan    String?  @db.Text
+  middayPlan     String?  @db.Text
+  afternoonPlan  String?  @db.Text
+  eveningPlan    String?  @db.Text
+
+  // Relations
+  settings UserSettings @relation(fields: [userId], references: [userId])
+
+  @@index([userId])
+  @@index([date])
+  @@unique([userId, date]) // Ensure one entry per user per date
+}
+
+model RehabTask {
+  id            String      @id @default(cuid())
+  clientId      String?     // Store the client-side generated ID if needed
+  text          String      @db.Text // Changed from 'task' to 'text' to match component
+  order         Int         // To maintain task order
+  journalEntry  JournalEntry @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+  journalEntryId String
+
+  @@index([journalEntryId])
+}
+
+model Win {
+  id            String      @id @default(cuid())
+  win           String      @db.Text
+  order         Int         // To maintain order of wins
+  journalEntry  JournalEntry @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+  journalEntryId String
+
+  @@index([journalEntryId])
+}
