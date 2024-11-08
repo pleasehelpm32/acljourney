@@ -1,9 +1,7 @@
-"use client";
-
+// components/SurgeryDate.jsx
 import * as React from "react";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
-
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -12,18 +10,17 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Label } from "@/components/ui/label";
 
-export default function SurgeryDate() {
-  const [date, setDate] = React.useState();
-
+export default function SurgeryDate({ value, onChange }) {
   return (
-    <div className="flex flex-row items-center gap-4 max-w-sm">
-      <label
+    <div className="space-y-3">
+      <Label
         htmlFor="surgeryDate"
         className="text-sm font-medium text-gray-700"
       >
         Surgery Date
-      </label>
+      </Label>
       <Popover>
         <PopoverTrigger asChild>
           <Button
@@ -31,19 +28,18 @@ export default function SurgeryDate() {
             variant={"outline"}
             className={cn(
               "w-full justify-start text-left font-normal",
-              !date && "text-muted-foreground"
+              !value && "text-muted-foreground"
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {date ? format(date, "PPP") : "Select your surgery date"}
+            {value ? format(value, "PPP") : "Select your surgery date"}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0">
           <Calendar
             mode="single"
-            selected={date}
-            onSelect={setDate}
-            initialFocus
+            selected={value}
+            onSelect={onChange}
             disabled={(date) =>
               date > new Date() || date < new Date("2000-01-01")
             }

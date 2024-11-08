@@ -21,10 +21,48 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import RehabTasks from "../../../components/journal/RehabTasks";
+import { useRouter } from "next/navigation"; // Add this
+import { useToast } from "@/hooks/use-toast";
+
+import { createJournalEntry, getJournalEntry } from "@/utils/actions";
 
 export default function JournalEntryPage({ params }) {
   const unwrappedParams = React.use(params);
+
   // Form handling with validation
+
+  const [selectedEmotion, setSelectedEmotion] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const emotions = ["😭", "🙁", "😐", "🙂", "😃"];
+  const levels = [0, 1, 2, 3, 4, 5];
+  const swellingOptions = ["None", "Mild", "Moderate", "Severe"];
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
+  const [journalData, setJournalData] = useState(null);
+  const rehabTasksRef = useRef(null);
+  const { toast } = useToast();
+  const timeBlocks = [
+    {
+      id: "morning",
+      label: "Morning",
+      placeholder: "e.g., Ice therapy, gentle stretches, work from home...",
+    },
+    {
+      id: "midDay",
+      label: "Mid-Day",
+      placeholder: "e.g., PT appointment, walking practice, lunch...",
+    },
+    {
+      id: "afternoon",
+      label: "Afternoon",
+      placeholder: "e.g., Exercise session, work tasks, rest period...",
+    },
+    {
+      id: "evening",
+      label: "Evening",
+      placeholder: "e.g., Recovery exercises, elevation time, sleep prep...",
+    },
+  ];
   const {
     control,
     register,
@@ -32,6 +70,7 @@ export default function JournalEntryPage({ params }) {
     formState: { errors },
     watch,
     setValue,
+    reset,
   } = useForm({
     defaultValues: {
       emotion: null,
@@ -55,72 +94,140 @@ export default function JournalEntryPage({ params }) {
     },
   });
 
-  const [selectedEmotion, setSelectedEmotion] = useState(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const emotions = ["😭", "🙁", "😐", "🙂", "😃"];
-  const levels = [0, 1, 2, 3, 4, 5];
-  const swellingOptions = ["None", "Mild", "Moderate", "Severe"];
-
-  const timeBlocks = [
-    {
-      id: "morning",
-      label: "Morning",
-      placeholder: "e.g., Ice therapy, gentle stretches, work from home...",
-    },
-    {
-      id: "midDay",
-      label: "Mid-Day",
-      placeholder: "e.g., PT appointment, walking practice, lunch...",
-    },
-    {
-      id: "afternoon",
-      label: "Afternoon",
-      placeholder: "e.g., Exercise session, work tasks, rest period...",
-    },
-    {
-      id: "evening",
-      label: "Evening",
-      placeholder: "e.g., Recovery exercises, elevation time, sleep prep...",
-    },
-  ];
-
-  // Auto-save functionality
-  useEffect(() => {
-    const saveTimeout = setTimeout(() => {
-      if (isSaving) {
-        // Save logic here
-        console.log("Saving...");
-        setIsSaving(false);
-      }
-    }, 1000);
-
-    return () => clearTimeout(saveTimeout);
-  }, [isSaving]);
-
   const formatDate = (dateStr) => {
-    return new Date(dateStr).toLocaleDateString("en-US", {
+    // Split the date string into components
+    const [year, month, day] = dateStr.split("-").map(Number);
+
+    // Create date using local timezone (months are 0-based in JavaScript)
+    const date = new Date(year, month - 1, day, 12, 0, 0);
+
+    return date.toLocaleDateString("en-US", {
       weekday: "long",
       year: "numeric",
       month: "long",
       day: "numeric",
     });
   };
+
   const formattedDate = formatDate(unwrappedParams.date);
 
-  const rehabTasksRef = useRef(null);
+  useEffect(() => {
+    async function loadJournalEntry() {
+      try {
+        setIsLoading(true);
+        const result = await getJournalEntry(unwrappedParams.date);
 
-  // Update your onSubmit function
-  const onSubmit = (data) => {
-    // Get tasks from ref only during submission
-    const tasks = rehabTasksRef.current?.getTasks() || [];
+        if (result.success && result.data) {
+          const entry = result.data;
+          setJournalData(entry); // Store the result in state
 
-    console.log({
-      ...data,
-      tasks,
-      selectedEmotion,
-    });
+          // Reset form with existing data
+          reset({
+            energyLevel: entry.energyLevel,
+            painLevel: entry.painLevel,
+            swelling: entry.swelling,
+            kneeFlexion: entry.kneeFlexion,
+            kneeExtension: entry.kneeExtension,
+            focus: entry.dailyFocus,
+            selfCare: entry.selfCare,
+            biggestChallenge: entry.biggestChallenge,
+            lessonLearned: entry.lessonLearned,
+            improvement: entry.improvement,
+            timeBlockPlans: {
+              morning: entry.morningPlan,
+              midDay: entry.middayPlan,
+              afternoon: entry.afternoonPlan,
+              evening: entry.eveningPlan,
+            },
+            wins: entry.wins.map((w) => w.win),
+          });
+
+          setSelectedEmotion(entry.emotion);
+        }
+      } catch (error) {
+        console.error("Error loading journal entry:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load journal entry.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadJournalEntry();
+  }, [unwrappedParams.date, reset, toast]);
+
+  const onSubmit = async (data) => {
+    try {
+      setIsSaving(true);
+      const tasks = rehabTasksRef.current?.getTasks() || [];
+
+      const entryDate = new Date(unwrappedParams.date);
+      entryDate.setHours(12, 0, 0, 0);
+
+      const formData = {
+        date: (() => {
+          const d = new Date(unwrappedParams.date);
+          d.setHours(12, 0, 0, 0); // Set to noon to avoid timezone issues
+
+          return d;
+        })(),
+        selectedEmotion,
+        energyLevel: data.energyLevel,
+        painLevel: data.painLevel,
+        swelling: data.swelling,
+        kneeFlexion: data.kneeFlexion,
+        kneeExtension: data.kneeExtension,
+        focus: data.focus,
+        selfCare: data.selfCare,
+        biggestChallenge: data.biggestChallenge,
+        lessonLearned: data.lessonLearned,
+        improvement: data.improvement,
+        timeBlockPlans: {
+          morning: data.timeBlockPlans.morning || "",
+          midDay: data.timeBlockPlans.midDay || "",
+          afternoon: data.timeBlockPlans.afternoon || "",
+          evening: data.timeBlockPlans.evening || "",
+        },
+        tasks: tasks.map((task) => ({
+          text: task.text || "",
+          completed: Boolean(task.completed),
+        })),
+        wins: data.wins.filter((win) => win.trim() !== ""), // Filter out empty wins
+      };
+
+      // Log the full form data
+      console.log("Full form data:", formData);
+
+      if (!formData.date) {
+        throw new Error("Date is required");
+      }
+
+      const result = await createJournalEntry(formData);
+
+      if (result.success) {
+        toast({
+          title: "Success!",
+          description: "Journal entry saved successfully.",
+        });
+        router.push("/journal");
+      } else {
+        throw new Error(result.error || "Failed to save journal entry");
+      }
+    } catch (error) {
+      console.error("Error saving journal entry:", error);
+      toast({
+        title: "Error",
+        description:
+          error.message || "Failed to save journal entry. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
-
   // Form section component for better organization
   const FormSection = ({ title, children, className }) => (
     <div className={cn("space-y-4", className)}>
@@ -137,6 +244,17 @@ export default function JournalEntryPage({ params }) {
       {children}
     </div>
   );
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto p-4 max-w-3xl flex justify-center items-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-2">
+          <Save className="h-8 w-8 animate-spin text-muted-foreground" />
+          <p className="text-muted-foreground">Loading journal entry...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <form
@@ -273,22 +391,31 @@ export default function JournalEntryPage({ params }) {
               {/* Swelling */}
               <div className="space-y-2">
                 <Label>Swelling</Label>
-                <RadioGroup
-                  className="flex flex-wrap gap-4"
-                  {...register("swelling", {
-                    required: "Please select swelling level",
-                  })}
-                >
-                  {swellingOptions.map((option) => (
-                    <div key={option} className="flex items-center space-x-2">
-                      <RadioGroupItem
-                        value={option.toLowerCase()}
-                        id={option.toLowerCase()}
-                      />
-                      <Label htmlFor={option.toLowerCase()}>{option}</Label>
-                    </div>
-                  ))}
-                </RadioGroup>
+                <Controller
+                  name="swelling"
+                  control={control}
+                  rules={{ required: "Please select swelling level" }}
+                  render={({ field }) => (
+                    <RadioGroup
+                      className="flex flex-wrap gap-4"
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      {swellingOptions.map((option) => (
+                        <div
+                          key={option}
+                          className="flex items-center space-x-2"
+                        >
+                          <RadioGroupItem
+                            value={option.toLowerCase()}
+                            id={option.toLowerCase()}
+                          />
+                          <Label htmlFor={option.toLowerCase()}>{option}</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  )}
+                />
                 {errors.swelling && (
                   <p className="text-sm text-red-500">
                     {errors.swelling.message}
@@ -318,7 +445,10 @@ export default function JournalEntryPage({ params }) {
 
           {/* Rehab Tasks */}
           <FormSection title="Rehab Progress">
-            <RehabTasks ref={rehabTasksRef} />
+            <RehabTasks
+              ref={rehabTasksRef}
+              initialTasks={journalData?.rehabTasks || []}
+            />
           </FormSection>
 
           {/* Focus & Self-Care */}

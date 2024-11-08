@@ -7,11 +7,11 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 
-export default function GraftTypeSelect() {
+export default function GraftTypeSelect({ value, onChange }) {
   return (
     <div className="space-y-3">
       <Label className="text-sm font-medium text-gray-700">Graft Type</Label>
-      <Select>
+      <Select value={value} onValueChange={onChange}>
         <SelectTrigger className="w-full">
           <SelectValue placeholder="Select your graft type" />
         </SelectTrigger>

@@ -68,9 +68,9 @@ model JournalEntry {
 
 model RehabTask {
   id            String      @id @default(cuid())
-  clientId      String?     // Store the client-side generated ID if needed
-  text          String      @db.Text // Changed from 'task' to 'text' to match component
-  order         Int         // To maintain task order
+  text          String      @db.Text
+  completed     Boolean     @default(false)  // Add this line
+  order         Int
   journalEntry  JournalEntry @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
   journalEntryId String
 

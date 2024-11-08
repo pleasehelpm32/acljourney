@@ -1,62 +1,81 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import StreakCounter from "@/components/journal/StreakCounter";
 import WeekAccordion from "@/components/journal/WeekAccordion";
-import CalendarDay from "@/components/journal/CalendarDay";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { useState } from "react";
+import { Plus, Save } from "lucide-react";
 import Link from "next/link";
+import { getJournalWeeks } from "@/utils/actions";
+import { useToast } from "@/hooks/use-toast";
 
 export default function JournalPage() {
   const [date, setDate] = useState(new Date());
-  const [expandedWeek, setExpandedWeek] = useState("current-week");
+  const [expandedWeeks, setExpandedWeeks] = useState([]);
+  const [weeks, setWeeks] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
   const formatDateForUrl = (date) => {
-    return new Date(date).toISOString().split("T")[0];
+    const d = new Date(date);
+    d.setHours(12, 0, 0, 0); // Set to noon
+
+    const year = d.getFullYear();
+    const month = d.getMonth() + 1;
+    const day = d.getDate();
+
+    const formatted = `${year}-${String(month).padStart(2, "0")}-${String(
+      day
+    ).padStart(2, "0")}`;
+    console.log("Formatting URL date:", { original: date, formatted });
+    return formatted;
   };
 
-  // Example data with proper date objects
-  const mockWeeks = [
-    {
-      id: "week-3",
-      number: 3,
-      dateRange: "Nov 18 - Nov 24",
-      startDate: new Date(2024, 10, 18),
-      endDate: new Date(2024, 10, 24),
-      entries: Array(7).fill("future"),
-    },
-    {
-      id: "current-week",
-      number: 2,
-      dateRange: "Nov 11 - Nov 17",
-      startDate: new Date(2024, 10, 11),
-      endDate: new Date(2024, 10, 17),
-      entries: [
-        "completed",
-        "completed",
-        "missed",
-        "completed",
-        "future",
-        "future",
-        "future",
-      ],
-    },
-    {
-      id: "week-1",
-      number: 1,
-      dateRange: "Nov 4 - Nov 10",
-      startDate: new Date(2024, 10, 4),
-      endDate: new Date(2024, 10, 10),
-      entries: Array(7).fill("completed"),
-    },
-  ].sort((a, b) => b.number - a.number);
+  // Then in your JSX
+  const today = new Date();
 
-  // Find which week a date belongs to
+  const formattedToday = formatDateForUrl(today);
+
+  useEffect(() => {
+    async function loadJournalWeeks() {
+      try {
+        setIsLoading(true);
+        const result = await getJournalWeeks();
+        console.log("API Response:", result);
+
+        if (result.success) {
+          setWeeks(result.data || []);
+          // Only set initial expanded week if no weeks are expanded
+          if (expandedWeeks.length === 0 && result.data?.length > 0) {
+            setExpandedWeeks([result.data[0].id]); // Set as array with first week's id
+          }
+        } else {
+          console.error("Failed to load weeks:", result.error);
+          toast({
+            title: "Error",
+            description: result.error || "Failed to load journal entries",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error("Component error:", error);
+        toast({
+          title: "Error",
+          description: "Unable to load journal entries. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadJournalWeeks();
+  }, [toast]); // Remove expandedWeeks from dependency array
+
   const findWeekForDate = (date) => {
-    return mockWeeks.find((week) => {
+    return weeks.find((week) => {
       const clickedDate = new Date(date);
-      // Reset time portions for accurate comparison
       clickedDate.setHours(0, 0, 0, 0);
       const startDate = new Date(week.startDate);
       startDate.setHours(0, 0, 0, 0);
@@ -69,10 +88,9 @@ export default function JournalPage() {
 
   const handleDateSelect = (newDate) => {
     setDate(newDate);
-
     const selectedWeek = findWeekForDate(newDate);
     if (selectedWeek) {
-      setExpandedWeek(selectedWeek.id);
+      setExpandedWeeks([selectedWeek.id]); // Set as array with selected week's id
     }
   };
 
@@ -83,15 +101,30 @@ export default function JournalPage() {
     const dayIndex = new Date(date).getDay();
     return week.entries[dayIndex];
   };
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto p-4 max-w-3xl flex justify-center items-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-2">
+          <Save className="h-8 w-8 animate-spin text-muted-foreground" />
+          <p className="text-muted-foreground">Loading journal entries...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-4 max-w-3xl">
       <div className="flex flex-col md:flex-row justify-between items-start gap-6 mb-8">
         <div className="space-y-4 w-full md:w-auto">
-          <StreakCounter streak={3} />
-          <Link href={`/journal/${formatDateForUrl(new Date())}`}>
+          <StreakCounter />
+          <Link
+            href={`/journal/${formattedToday}`}
+            className="w-full md:w-auto"
+          >
             <Button className="w-full md:w-auto">
               <Plus className="h-4 w-4 mr-2" />
-              Add Journal Entry
+              Add Journal Entry ({formattedToday})
             </Button>
           </Link>
         </div>
@@ -117,9 +150,15 @@ export default function JournalPage() {
       </div>
 
       <WeekAccordion
-        weeks={mockWeeks}
-        expandedWeek={expandedWeek}
-        setExpandedWeek={setExpandedWeek}
+        weeks={weeks}
+        expandedWeek={expandedWeeks} // This is now always an array
+        setExpandedWeek={(value) => {
+          setExpandedWeeks((prev) =>
+            prev.includes(value)
+              ? prev.filter((v) => v !== value)
+              : [...prev, value]
+          );
+        }}
       />
     </div>
   );
