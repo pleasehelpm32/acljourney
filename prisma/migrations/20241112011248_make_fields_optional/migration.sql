@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "UserSettings" ALTER COLUMN "knee" DROP NOT NULL,
+ALTER COLUMN "graftType" DROP NOT NULL,
+ALTER COLUMN "weightBearing" DROP NOT NULL;

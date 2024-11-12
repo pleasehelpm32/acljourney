@@ -5,6 +5,66 @@ import prisma from "@/utils/db";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 
+function createSafeDate(dateInput) {
+  try {
+    // If it's already a Date object
+    if (dateInput instanceof Date) {
+      const safeDate = new Date(
+        Date.UTC(
+          dateInput.getFullYear(),
+          dateInput.getMonth(),
+          dateInput.getDate(),
+          12,
+          0,
+          0
+        )
+      );
+
+      return safeDate;
+    }
+
+    // If it's a string
+    if (typeof dateInput === "string") {
+      // Handle ISO string format
+      if (dateInput.includes("T")) {
+        const existingDate = new Date(dateInput);
+        const safeDate = new Date(
+          Date.UTC(
+            existingDate.getFullYear(),
+            existingDate.getMonth(),
+            existingDate.getDate(),
+            12,
+            0,
+            0
+          )
+        );
+
+        return safeDate;
+      }
+
+      // Handle YYYY-MM-DD format
+      const [year, month, day] = dateInput.split("-").map(Number);
+      if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+        const safeDate = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+
+        return safeDate;
+      }
+    }
+
+    // If we got here, throw an error
+    throw new Error(`Invalid date format: ${dateInput}`);
+  } catch (error) {
+    console.error("Error in createSafeDate:", error);
+    // Return current date as fallback
+    const today = new Date();
+    const safeDate = new Date(
+      Date.UTC(today.getFullYear(), today.getMonth(), today.getDate(), 12, 0, 0)
+    );
+
+    return safeDate;
+  }
+}
+
 // Settings Actions
 
 export async function createUpdateSettings(formData) {
@@ -60,36 +120,47 @@ export async function getSettings() {
   }
 }
 
-// Journal Entry Actions
 export async function createJournalEntry(formData) {
+  console.log("Starting createJournalEntry with formData:", formData);
+
+  // Early validation
+  if (!formData || typeof formData !== "object") {
+    console.error("Invalid form data received:", formData);
+    return { success: false, error: "Invalid form data" };
+  }
+
   try {
-    const { userId } = await auth();
-    if (!userId) throw new Error("Unauthorized");
+    const session = await auth();
 
-    console.log("Received form data in action:", formData);
+    if (!session?.userId) {
+      console.error("No user ID found in session");
+      return { success: false, error: "Authentication required" };
+    }
 
-    const sanitizedData = {
-      userId,
-      date: new Date(formData.date),
-      emotion: formData.selectedEmotion ?? null,
-      energyLevel: formData.energyLevel ?? null,
-      painLevel: formData.painLevel ?? null,
-      swelling: formData.swelling || null,
-      kneeFlexion: formData.kneeFlexion || null,
-      kneeExtension: formData.kneeExtension || null,
-      dailyFocus: formData.focus || null,
-      selfCare: formData.selfCare || null,
-      biggestChallenge: formData.biggestChallenge || null,
-      lessonLearned: formData.lessonLearned || null,
-      improvement: formData.improvement || null,
-      morningPlan: formData.timeBlockPlans?.morning || null,
-      middayPlan: formData.timeBlockPlans?.midDay || null,
-      afternoonPlan: formData.timeBlockPlans?.afternoon || null,
-      eveningPlan: formData.timeBlockPlans?.evening || null,
+    const userId = session.userId;
+    const entryDate = createSafeDate(formData.date);
+
+    // Prepare the data object
+    const data = {
+      emotion: formData.selectedEmotion,
+      energyLevel: formData.energyLevel,
+      painLevel: formData.painLevel,
+      swelling: formData.swelling,
+      kneeFlexion: formData.kneeFlexion,
+      kneeExtension: formData.kneeExtension,
+      dailyFocus: formData.focus,
+      selfCare: formData.selfCare,
+      biggestChallenge: formData.biggestChallenge,
+      lessonLearned: formData.lessonLearned,
+      improvement: formData.improvement,
+      brainDump: formData.brainDump,
+      morningPlan: formData.timeBlockPlans?.morning ?? null,
+      middayPlan: formData.timeBlockPlans?.midDay ?? null,
+      afternoonPlan: formData.timeBlockPlans?.afternoon ?? null,
+      eveningPlan: formData.timeBlockPlans?.evening ?? null,
     };
-    const entryDate = new Date(formData.date);
-    entryDate.setHours(12, 0, 0, 0);
-    console.log("Action date:", entryDate);
+
+    console.log("Prepared data for upsert:", { userId, entryDate, data });
 
     const entry = await prisma.journalEntry.upsert({
       where: {
@@ -99,64 +170,76 @@ export async function createJournalEntry(formData) {
         },
       },
       update: {
-        ...sanitizedData,
+        ...data,
         rehabTasks: {
           deleteMany: {},
-          create: formData.tasks.map((task, index) => ({
-            text: task.text || "",
-            completed: Boolean(task.completed),
-            order: index,
-            date: entryDate,
-          })),
+          create: Array.isArray(formData.tasks)
+            ? formData.tasks.map((task, index) => ({
+                text: task.text || "",
+                completed: Boolean(task.completed),
+                order: index,
+              }))
+            : [],
         },
         wins: {
           deleteMany: {},
-          create: formData.wins.map((win, index) => ({
-            win: win || "",
-            order: index,
-          })),
+          create: Array.isArray(formData.wins)
+            ? formData.wins.map((win, index) => ({
+                win: win || "",
+                order: index,
+              }))
+            : [],
         },
       },
       create: {
-        ...sanitizedData,
+        userId,
+        date: entryDate,
+        ...data,
         rehabTasks: {
-          create: formData.tasks.map((task, index) => ({
-            text: task.text || "",
-            completed: Boolean(task.completed),
-            order: index,
-            date: entryDate,
-          })),
+          create: Array.isArray(formData.tasks)
+            ? formData.tasks.map((task, index) => ({
+                text: task.text || "",
+                completed: Boolean(task.completed),
+                order: index,
+              }))
+            : [],
         },
         wins: {
-          create: formData.wins.map((win, index) => ({
-            win: win || "",
-            order: index,
-          })),
+          create: Array.isArray(formData.wins)
+            ? formData.wins.map((win, index) => ({
+                win: win || "",
+                order: index,
+              }))
+            : [],
         },
-      },
-      include: {
-        rehabTasks: true,
-        wins: true,
       },
     });
 
-    revalidatePath("/journal");
+    console.log("Successfully created/updated entry:", entry);
+
+    await revalidatePath("/journal");
     return { success: true, data: entry };
   } catch (error) {
-    console.error("Error in createJournalEntry:", error);
-    return { success: false, error: error.message };
+    console.error("Error in createJournalEntry:", {
+      name: error?.name,
+      message: error?.message,
+      stack: error?.stack,
+    });
+
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to save journal entry",
+    };
   }
 }
-
 export async function getJournalEntry(date) {
   try {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
 
-    const entryDate = new Date(date);
-    entryDate.setHours(12, 0, 0, 0);
-
-    console.log("Fetching entry for date:", entryDate);
+    // Use the timezone-safe date creation
+    const entryDate = createSafeDate(date);
 
     const entry = await prisma.journalEntry.findUnique({
       where: {
@@ -190,12 +273,15 @@ export async function getJournalEntries(startDate, endDate) {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
 
+    const start = createSafeDate(startDate);
+    const end = createSafeDate(endDate);
+
     const entries = await prisma.journalEntry.findMany({
       where: {
         userId,
         date: {
-          gte: startDate,
-          lte: endDate,
+          gte: start,
+          lte: end,
         },
       },
       include: {
@@ -212,7 +298,6 @@ export async function getJournalEntries(startDate, endDate) {
     return { success: false, error: error.message };
   }
 }
-
 export async function getJournalWeeks() {
   try {
     const { userId } = await auth();
@@ -229,19 +314,11 @@ export async function getJournalWeeks() {
       orderBy: { date: "desc" },
     });
 
-    console.log(
-      "Found entries:",
-      entries.map((e) => ({
-        date: new Date(e.date).toISOString(),
-        formattedDate: new Date(e.date).toLocaleDateString(),
-      }))
-    );
-
-    // Get current date at midnight
+    // Get current date at midnight UTC
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Calculate start date (either surgery date or first entry date)
+    // Calculate start date from surgery date
     const startDate = userSettings?.surgeryDate
       ? new Date(userSettings.surgeryDate)
       : entries.length > 0
@@ -251,15 +328,13 @@ export async function getJournalWeeks() {
     startDate.setHours(0, 0, 0, 0);
 
     // Create a map of completed entries by date string
-    const completedEntries = new Map();
-    entries.forEach((entry) => {
-      const entryDate = new Date(entry.date);
-      entryDate.setHours(0, 0, 0, 0);
-      const dateStr = entryDate.toISOString().split("T")[0];
-      completedEntries.set(dateStr, true);
-    });
-
-    console.log("Completed entries map:", Array.from(completedEntries.keys()));
+    const completedEntries = new Map(
+      entries.map((entry) => {
+        const d = new Date(entry.date);
+        d.setHours(0, 0, 0, 0);
+        return [d.toISOString().split("T")[0], true];
+      })
+    );
 
     // Group entries by week
     const weekEntries = {};
@@ -297,26 +372,17 @@ export async function getJournalWeeks() {
           const date = new Date(weekStart);
           date.setDate(date.getDate() + i);
           date.setHours(0, 0, 0, 0);
-
           const dateStr = date.toISOString().split("T")[0];
-          console.log("Checking date:", {
-            date: dateStr,
-            isCompleted: completedEntries.has(dateStr),
-            isFuture: date > today,
-            isToday: date.getTime() === today.getTime(),
-          });
+          const todayStr = today.toISOString().split("T")[0];
 
-          if (date > today) {
+          if (dateStr > todayStr) {
             weekEntries[weekKey].entries[i] = "future";
           } else if (date < startDate) {
             weekEntries[weekKey].entries[i] = "disabled";
           } else if (completedEntries.has(dateStr)) {
             weekEntries[weekKey].entries[i] = "completed";
-          } else if (date.getTime() === today.getTime()) {
-            // Special handling for today
-            weekEntries[weekKey].entries[i] = completedEntries.has(dateStr)
-              ? "completed"
-              : "future";
+          } else if (dateStr === todayStr) {
+            weekEntries[weekKey].entries[i] = "future";
           } else if (date < today) {
             weekEntries[weekKey].entries[i] = "missed";
           } else {
@@ -328,20 +394,9 @@ export async function getJournalWeeks() {
       currentDate.setDate(currentDate.getDate() + 1);
     }
 
-    const result = Object.values(weekEntries).sort(
-      (a, b) => b.number - a.number
-    );
-    console.log(
-      "Final weeks data:",
-      result.map((week) => ({
-        dateRange: week.dateRange,
-        entries: week.entries,
-      }))
-    );
-
     return {
       success: true,
-      data: result,
+      data: Object.values(weekEntries).sort((a, b) => b.number - a.number),
     };
   } catch (error) {
     console.error("Error in getJournalWeeks:", error);
@@ -352,20 +407,31 @@ export async function getJournalWeeks() {
 export async function calculateStreak() {
   try {
     const { userId } = await auth();
-    if (!userId) throw new Error("Unauthorized");
+    if (!userId) {
+      return { success: false, error: "Unauthorized" };
+    }
 
-    // Get user's surgery date and all entries
+    // Get user's surgery date and settings
     const userSettings = await prisma.userSettings.findUnique({
       where: { userId },
       select: { surgeryDate: true },
     });
 
+    // If no settings or surgery date, return 0 streak
+    if (!userSettings?.surgeryDate) {
+      return { success: true, data: 0 };
+    }
+
+    // Get journal entries
     const entries = await prisma.journalEntry.findMany({
       where: { userId },
       orderBy: { date: "desc" }, // Most recent first
     });
 
-    if (!entries.length) return { success: true, data: 0 };
+    // If no entries, return 0 streak
+    if (!entries || entries.length === 0) {
+      return { success: true, data: 0 };
+    }
 
     let streak = 0;
     const today = new Date();
@@ -380,48 +446,47 @@ export async function calculateStreak() {
       })
     );
 
-    // Start checking from the most recent entry
-    let checkDate = new Date(entries[0].date);
+    // Start checking from today and go backwards
+    let checkDate = new Date(today);
     checkDate.setHours(0, 0, 0, 0);
 
-    // If the most recent entry is from today or yesterday, start counting
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
+    while (true) {
+      const dateStr = checkDate.toISOString().split("T")[0];
 
-    if (checkDate <= today) {
-      while (true) {
-        const dateStr = checkDate.toISOString().split("T")[0];
-
-        // Stop if we hit a day without an entry
-        if (!entryDates.has(dateStr)) {
-          break;
-        }
-
-        // Stop if we've gone past the surgery date
-        if (userSettings?.surgeryDate) {
-          const surgeryDate = new Date(userSettings.surgeryDate);
-          surgeryDate.setHours(0, 0, 0, 0);
-          if (checkDate < surgeryDate) {
-            break;
-          }
-        }
-
-        streak++;
-
-        // Move to previous day
-        checkDate.setDate(checkDate.getDate() - 1);
+      // Stop if we hit a day without an entry
+      if (!entryDates.has(dateStr)) {
+        break;
       }
-    }
 
-    console.log("Calculated streak:", {
-      streak,
-      mostRecentEntry: entries[0].date,
-      today: today.toISOString(),
-    });
+      // Stop if we've gone past the surgery date
+      const surgeryDate = new Date(userSettings.surgeryDate);
+      surgeryDate.setHours(0, 0, 0, 0);
+      if (checkDate < surgeryDate) {
+        break;
+      }
+
+      streak++;
+      checkDate.setDate(checkDate.getDate() - 1);
+    }
 
     return { success: true, data: streak };
   } catch (error) {
     console.error("Error calculating streak:", error);
+    return { success: true, data: 0 }; // Return 0 instead of error for better UX
+  }
+}
+export async function getSurgeryDate() {
+  try {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized");
+
+    const settings = await prisma.userSettings.findUnique({
+      where: { userId },
+      select: { surgeryDate: true },
+    });
+
+    return { success: true, data: settings?.surgeryDate };
+  } catch (error) {
     return { success: false, error: error.message };
   }
 }

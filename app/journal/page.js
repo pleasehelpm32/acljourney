@@ -1,3 +1,4 @@
+// app/journal/page.js
 "use client";
 
 import { useState, useEffect } from "react";
@@ -48,7 +49,7 @@ export default function JournalPage() {
           setWeeks(result.data || []);
           // Only set initial expanded week if no weeks are expanded
           if (expandedWeeks.length === 0 && result.data?.length > 0) {
-            setExpandedWeeks([result.data[0].id]); // Set as array with first week's id
+            setExpandedWeeks([result.data[0].id]); // Initialize with an array
           }
         } else {
           console.error("Failed to load weeks:", result.error);
@@ -71,7 +72,7 @@ export default function JournalPage() {
     }
 
     loadJournalWeeks();
-  }, [toast]); // Remove expandedWeeks from dependency array
+  }, [toast]);
 
   const findWeekForDate = (date) => {
     return weeks.find((week) => {
@@ -90,7 +91,10 @@ export default function JournalPage() {
     setDate(newDate);
     const selectedWeek = findWeekForDate(newDate);
     if (selectedWeek) {
-      setExpandedWeeks([selectedWeek.id]); // Set as array with selected week's id
+      // Add the selected week's id to expanded weeks if it's not already there
+      setExpandedWeeks((prev) =>
+        prev.includes(selectedWeek.id) ? prev : [...prev, selectedWeek.id]
+      );
     }
   };
 
@@ -122,7 +126,7 @@ export default function JournalPage() {
             href={`/journal/${formattedToday}`}
             className="w-full md:w-auto"
           >
-            <Button className="w-full md:w-auto">
+            <Button className="w-full md:w-auto my-4">
               <Plus className="h-4 w-4 mr-2" />
               Add Journal Entry ({formattedToday})
             </Button>
@@ -151,13 +155,10 @@ export default function JournalPage() {
 
       <WeekAccordion
         weeks={weeks}
-        expandedWeek={expandedWeeks} // This is now always an array
-        setExpandedWeek={(value) => {
-          setExpandedWeeks((prev) =>
-            prev.includes(value)
-              ? prev.filter((v) => v !== value)
-              : [...prev, value]
-          );
+        expandedWeek={expandedWeeks}
+        setExpandedWeek={(values) => {
+          // Directly set the new array of values
+          setExpandedWeeks(values);
         }}
       />
     </div>

@@ -1,4 +1,3 @@
-// components/journal/RehabTasks.jsx
 "use client";
 
 import React, { useState, forwardRef, useImperativeHandle } from "react";
@@ -55,10 +54,28 @@ const RehabTasks = forwardRef(({ initialTasks = [] }, ref) => {
     setTasks((prev) => prev.filter((task) => task.id !== id));
   };
 
+  const handleKeyDown = (e, taskId, isLastTask) => {
+    if (e.key === "Enter") {
+      e.preventDefault(); // Prevent form submission
+
+      const currentTask = tasks.find((task) => task.id === taskId);
+
+      // Only add new task if current task has content
+      if (currentTask.text.trim() && isLastTask) {
+        addTask();
+        // Focus the new input after React re-renders
+        setTimeout(() => {
+          const inputs = document.querySelectorAll("[data-rehab-task-input]");
+          inputs[inputs.length - 1]?.focus();
+        }, 0);
+      }
+    }
+  };
+
   return (
     <div className="space-y-4">
       <Label>Rehab Checklist</Label>
-      {tasks.map((task) => (
+      {tasks.map((task, index) => (
         <div key={task.id} className="flex items-center gap-2">
           <Checkbox
             checked={task.completed}
@@ -69,7 +86,11 @@ const RehabTasks = forwardRef(({ initialTasks = [] }, ref) => {
             <Input
               value={task.text}
               onChange={(e) => updateTask(task.id, e.target.value)}
+              onKeyDown={(e) =>
+                handleKeyDown(e, task.id, index === tasks.length - 1)
+              }
               placeholder="Enter rehab task..."
+              data-rehab-task-input // Added for focusing
               className={cn(
                 "transition-all duration-200",
                 task.completed && "line-through text-muted-foreground"

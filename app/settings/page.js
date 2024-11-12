@@ -1,3 +1,4 @@
+// app/settings/page.js
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -64,6 +65,18 @@ export default function SettingsPage() {
     setIsSubmitting(true);
 
     try {
+      // Validate surgery date only
+      if (!surgeryDate) {
+        toast({
+          title: "Surgery Date Required",
+          description:
+            "Please select your surgery date to track your recovery progress.",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
       const formData = {
         surgeryDate,
         knee,
@@ -86,7 +99,8 @@ export default function SettingsPage() {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to save settings. Please try again.",
+        description:
+          error.message || "Failed to save settings. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -119,9 +133,18 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-4">
-              <h3 className="text-lg font-medium">Surgery Details</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium">Surgery Details</h3>
+                <span className="text-sm text-muted-foreground">
+                  * Surgery date required
+                </span>
+              </div>
               <Separator />
-              <SurgeryDate value={surgeryDate} onChange={setSurgeryDate} />
+              <SurgeryDate
+                value={surgeryDate}
+                onChange={setSurgeryDate}
+                required
+              />
               <KneeSelector value={knee} onChange={setKnee} />
               <GraftTypeSelect value={graftType} onChange={setGraftType} />
               <WeightBearingStatus

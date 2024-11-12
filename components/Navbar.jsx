@@ -35,16 +35,16 @@ export default function Navbar() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-6">
             <Link
+              href="/"
+              className="text-lg font-medium text-darkb hover:text-silver_d transition-colors"
+            >
+              Home
+            </Link>
+            <Link
               href="/journal"
               className="text-lg font-medium text-darkb hover:text-silver_d transition-colors"
             >
               Journal
-            </Link>
-            <Link
-              href="/wins"
-              className="text-lg font-medium text-darkb hover:text-silver_d transition-colors"
-            >
-              Wins
             </Link>
           </div>
         </div>
@@ -83,18 +83,18 @@ export default function Navbar() {
         <div className="md:hidden absolute top-20 left-0 right-0 bg-white shadow-lg z-50">
           <div className="flex flex-col p-4 space-y-4">
             <Link
+              href="/"
+              className="text-lg font-medium text-darkb hover:text-silver_d transition-colors"
+              onClick={toggleMenu}
+            >
+              Home
+            </Link>
+            <Link
               href="/journal"
               className="text-lg font-medium text-darkb hover:text-silver_d transition-colors"
               onClick={toggleMenu}
             >
               Journal
-            </Link>
-            <Link
-              href="/wins"
-              className="text-lg font-medium text-darkb hover:text-silver_d transition-colors"
-              onClick={toggleMenu}
-            >
-              Wins
             </Link>
             <Link
               href="/settings"

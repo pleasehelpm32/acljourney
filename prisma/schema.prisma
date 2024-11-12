@@ -16,9 +16,9 @@ model UserSettings {
 
   // Surgery Details
   surgeryDate     DateTime
-  knee            String    // "left" or "right"
-  graftType       String
-  weightBearing   String    // "weight-bearing" or "non-weight-bearing"
+  knee            String?    // "left" or "right"
+  graftType       String?
+  weightBearing   String?    // "weight-bearing" or "non-weight-bearing"
   favoriteSport   String?
   about           String?   @db.Text
 
@@ -51,6 +51,7 @@ model JournalEntry {
   biggestChallenge  String?  @db.Text
   lessonLearned     String?  @db.Text
   improvement       String?  @db.Text
+  brainDump         String?  @db.Text 
 
   // Game Plan
   morningPlan    String?  @db.Text
