@@ -1,7 +1,13 @@
+// components/journal/WeekBar.js
 import { CheckCircle, XCircle, Circle, MinusCircle } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { getLocalDate, formatDateForDisplay } from "@/utils/date";
+import {
+  getLocalDate,
+  formatDateForUrl,
+  formatDateForDisplay,
+  isSameDay,
+} from "@/utils/date";
 
 export default function WeekBar({ entries, startDate }) {
   const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -80,33 +86,19 @@ export default function WeekBar({ entries, startDate }) {
     }
   };
 
-  const formatDateForUrl = (date) => {
-    const d = new Date(date);
-    d.setHours(0, 0, 0, 0);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
-      2,
-      "0"
-    )}-${String(d.getDate()).padStart(2, "0")}`;
-  };
-
-  // Get today's date at midnight UTC
+  // Get today's date (normalized)
   const today = getLocalDate(new Date());
-  today.setHours(0, 0, 0, 0);
-  const todayStr = formatDateForDisplay(today);
 
-  const startDateLocal = new Date(startDate);
-  startDateLocal.setHours(0, 0, 0, 0);
+  // Normalize start date
+  const startDateLocal = getLocalDate(startDate);
 
   return (
     <div className="flex justify-between gap-2 my-6 px-2">
       {daysOfWeek.map((day, index) => {
-        const date = new Date(startDateLocal);
-        date.setDate(date.getDate() + index);
-        date.setHours(0, 0, 0, 0);
+        const currentDate = getLocalDate(startDateLocal);
+        currentDate.setDate(currentDate.getDate() + index);
 
-        const dateStr = formatDateForDisplay(date);
-        const isToday = dateStr === todayStr;
-
+        const isToday = isSameDay(currentDate, today);
         const status = entries?.[index];
         const isClickable =
           status === "completed" || status === "missed" || isToday;
@@ -138,7 +130,7 @@ export default function WeekBar({ entries, startDate }) {
             className={cn("relative group", isClickable && "hover:z-10")}
           >
             {isClickable ? (
-              <Link href={`/journal/${formatDateForUrl(date)}`}>
+              <Link href={`/journal/${formatDateForUrl(currentDate)}`}>
                 {dayContent}
               </Link>
             ) : (
