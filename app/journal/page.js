@@ -10,7 +10,12 @@ import { Plus, Save } from "lucide-react";
 import Link from "next/link";
 import { getJournalWeeks } from "@/utils/actions";
 import { useToast } from "@/hooks/use-toast";
-import { formatDateForUrl, getLocalDate } from "@/utils/date";
+import {
+  getLocalDate,
+  formatDateForUrl,
+  formatDateForDisplay,
+  formatFullDate,
+} from "@/utils/date";
 
 export default function JournalPage() {
   const [date, setDate] = useState(new Date());

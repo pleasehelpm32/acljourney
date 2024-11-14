@@ -12,3 +12,18 @@ export function formatDateForUrl(date) {
   const day = String(d.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
+
+export function formatDateForDisplay(date) {
+  const d = getLocalDate(date);
+  return d.toISOString().split("T")[0];
+}
+
+export function formatFullDate(dateStr) {
+  const d = getLocalDate(new Date(dateStr));
+  return d.toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}

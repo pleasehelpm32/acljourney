@@ -94,22 +94,20 @@ export default function WeekBar({ entries, startDate }) {
   today.setHours(0, 0, 0, 0);
   const todayStr = formatDateForDisplay(today);
 
+  const startDateLocal = new Date(startDate);
+  startDateLocal.setHours(0, 0, 0, 0);
+
   return (
     <div className="flex justify-between gap-2 my-6 px-2">
       {daysOfWeek.map((day, index) => {
-        const date = new Date(startDate);
+        const date = new Date(startDateLocal);
         date.setDate(date.getDate() + index);
         date.setHours(0, 0, 0, 0);
 
-        const dateStr = date.toISOString().split("T")[0];
+        const dateStr = formatDateForDisplay(date);
         const isToday = dateStr === todayStr;
 
-        // Determine the final status
-        let status = entries?.[index];
-        if (date < today && status !== "completed" && status !== "disabled") {
-          status = "missed";
-        }
-
+        const status = entries?.[index];
         const isClickable =
           status === "completed" || status === "missed" || isToday;
 
