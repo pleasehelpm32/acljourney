@@ -127,9 +127,34 @@ export default function WeekBar({ entries, startDate, currentDate }) {
         const date = getLocalDate(startDateLocal);
         date.setDate(date.getDate() + index);
 
-        // Here's the key change - using todayFromUI instead of new Date()
         const isActive = isSameDay(date, todayFromUI);
 
+        // Log details for each day
+        console.log(`Day ${index} (${day}) details:`, {
+          day,
+          date: date.toString(),
+          formattedDate: formatDateForUrl(date),
+          isActive,
+          todayFromUI: todayFromUI.toString(),
+          currentDate: currentDate?.toString(),
+          matches: {
+            withTodayFromUI: {
+              matches: isSameDay(date, todayFromUI),
+              date1: formatDateForUrl(date),
+              date2: formatDateForUrl(todayFromUI),
+            },
+            withCurrentDate: {
+              matches: isSameDay(date, currentDate),
+              date1: formatDateForUrl(date),
+              date2: formatDateForUrl(currentDate),
+            },
+            withSystemDate: {
+              matches: isSameDay(date, new Date()),
+              date1: formatDateForUrl(date),
+              date2: formatDateForUrl(new Date()),
+            },
+          },
+        });
         // Enhanced debug log for each date being processed
         if (index === 0) {
           console.log("First day processing:", {
