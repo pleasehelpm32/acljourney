@@ -73,29 +73,31 @@ export async function createUpdateSettings(formData) {
     const { userId } = session;
     if (!userId) throw new Error("Unauthorized");
 
-    // Validate required field
+    // Only validate surgery date
     if (!formData.surgeryDate) {
       throw new Error("Surgery date is required");
     }
 
-    // Sanitize and prepare the data
-    const sanitizedData = {
-      surgeryDate: new Date(formData.surgeryDate), // Required
-      knee: formData.knee || "right", // Provide defaults
-      graftType: formData.graftType || "patellar", // Provide defaults
-      weightBearing: formData.weightBearing || "weight-bearing", // Provide defaults
-      favoriteSport: formData.favoriteSport || null,
-      about: formData.about || null,
+    // Create settings object with only defined values
+    const settingsData = {
+      surgeryDate: new Date(formData.surgeryDate),
+      ...(formData.knee && { knee: formData.knee }),
+      ...(formData.graftType && { graftType: formData.graftType }),
+      ...(formData.weightBearing && { weightBearing: formData.weightBearing }),
+      ...(formData.favoriteSport?.trim() && {
+        favoriteSport: formData.favoriteSport.trim(),
+      }),
+      ...(formData.about?.trim() && { about: formData.about.trim() }),
     };
 
-    console.log("Sanitized settings data:", sanitizedData);
+    console.log("Settings data to save:", settingsData);
 
     const settings = await prisma.userSettings.upsert({
       where: { userId },
-      update: sanitizedData,
+      update: settingsData,
       create: {
         userId,
-        ...sanitizedData,
+        ...settingsData,
       },
     });
 
@@ -103,10 +105,7 @@ export async function createUpdateSettings(formData) {
     revalidatePath("/settings");
     return { success: true, data: settings };
   } catch (error) {
-    console.error("Settings error:", {
-      message: error.message,
-      stack: error.stack,
-    });
+    console.error("Settings error:", error);
     return { success: false, error: error.message };
   }
 }
@@ -482,6 +481,7 @@ export async function calculateStreak() {
     return { success: true, data: 0 }; // Return 0 instead of error for better UX
   }
 }
+// utils/actions.js
 export async function getSurgeryDate() {
   try {
     const { userId } = await auth();
@@ -492,8 +492,9 @@ export async function getSurgeryDate() {
       select: { surgeryDate: true },
     });
 
-    return { success: true, data: settings?.surgeryDate };
+    return { success: true, data: settings?.surgeryDate || null };
   } catch (error) {
+    console.error("Error getting surgery date:", error);
     return { success: false, error: error.message };
   }
 }
