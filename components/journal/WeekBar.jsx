@@ -124,49 +124,34 @@ export default function WeekBar({ entries, startDate, currentDate }) {
   return (
     <div className="flex justify-between gap-2 my-6 px-2">
       {daysOfWeek.map((day, index) => {
-        const date = getLocalDate(startDateLocal);
-        date.setDate(date.getDate() + index);
+        // Create a new date object for each iteration
+        const date = new Date(startDateLocal);
+        // Calculate the correct date by adding the index
+        const targetDate = new Date(
+          date.setDate(startDateLocal.getDate() + index)
+        );
+        // Normalize it
+        const normalizedDate = getLocalDate(targetDate);
 
-        const isActive = isSameDay(date, todayFromUI);
+        const isActive = isSameDay(normalizedDate, todayFromUI);
 
-        // Log details for each day
+        // Debug logging
         console.log(`Day ${index} (${day}) details:`, {
           day,
-          date: date.toString(),
-          formattedDate: formatDateForUrl(date),
+          date: normalizedDate.toString(),
+          formattedDate: formatDateForUrl(normalizedDate),
           isActive,
           todayFromUI: todayFromUI.toString(),
           currentDate: currentDate?.toString(),
+          dayOfWeek: normalizedDate.getDay(), // Add this to verify day alignment
           matches: {
             withTodayFromUI: {
-              matches: isSameDay(date, todayFromUI),
-              date1: formatDateForUrl(date),
+              matches: isSameDay(normalizedDate, todayFromUI),
+              date1: formatDateForUrl(normalizedDate),
               date2: formatDateForUrl(todayFromUI),
-            },
-            withCurrentDate: {
-              matches: isSameDay(date, currentDate),
-              date1: formatDateForUrl(date),
-              date2: formatDateForUrl(currentDate),
-            },
-            withSystemDate: {
-              matches: isSameDay(date, new Date()),
-              date1: formatDateForUrl(date),
-              date2: formatDateForUrl(new Date()),
             },
           },
         });
-        // Enhanced debug log for each date being processed
-        if (index === 0) {
-          console.log("First day processing:", {
-            date: date.toString(),
-            isActive,
-            matchesUIDate: isSameDay(date, todayFromUI),
-            formattedDate: formatDateForUrl(date),
-            formattedUIDate: formatDateForUrl(todayFromUI),
-            doTheyMatch:
-              formatDateForUrl(date) === formatDateForUrl(todayFromUI),
-          });
-        }
 
         const status = entries?.[index];
         const isClickable =
@@ -199,7 +184,7 @@ export default function WeekBar({ entries, startDate, currentDate }) {
             className={cn("relative group", isClickable && "hover:z-10")}
           >
             {isClickable ? (
-              <Link href={`/journal/${formatDateForUrl(date)}`}>
+              <Link href={`/journal/${formatDateForUrl(normalizedDate)}`}>
                 {dayContent}
               </Link>
             ) : (
