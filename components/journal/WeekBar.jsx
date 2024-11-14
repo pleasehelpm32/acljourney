@@ -12,6 +12,15 @@ import {
 export default function WeekBar({ entries, startDate }) {
   const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+  // Extract the date from the Add Journal Entry button format (2024-11-14)
+  const buttonDateMatch = document
+    .querySelector("button, a")
+    ?.textContent?.match(/\((\d{4}-\d{2}-\d{2})\)/);
+
+  const today = buttonDateMatch
+    ? getLocalDate(new Date(buttonDateMatch[1]))
+    : getLocalDate(new Date());
+
   const getStatusClasses = (status, isToday) => {
     const baseClasses = "transition-all duration-200 ease-in-out";
 
@@ -85,9 +94,6 @@ export default function WeekBar({ entries, startDate }) {
         );
     }
   };
-
-  // Get today's date (normalized)
-  const today = getLocalDate(new Date());
 
   // Normalize start date
   const startDateLocal = getLocalDate(startDate);
