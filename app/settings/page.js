@@ -60,20 +60,18 @@ export default function SettingsPage() {
     loadSettings();
   }, [toast]);
 
+  // app/settings/page.js
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      // Validate surgery date only
       if (!surgeryDate) {
         toast({
-          title: "Surgery Date Required",
-          description:
-            "Please select your surgery date to track your recovery progress.",
+          title: "Required Field Missing",
+          description: "Please select your surgery date",
           variant: "destructive",
         });
-        setIsSubmitting(false);
         return;
       }
 
@@ -86,7 +84,10 @@ export default function SettingsPage() {
         about,
       };
 
+      console.log("Submitting settings:", formData); // Debug log
+
       const result = await createUpdateSettings(formData);
+      console.log("Settings submission result:", result); // Debug log
 
       if (result.success) {
         toast({
@@ -94,13 +95,14 @@ export default function SettingsPage() {
           description: "Your profile has been updated successfully.",
         });
       } else {
-        throw new Error(result.error);
+        throw new Error(result.error || "Failed to save settings");
       }
     } catch (error) {
+      console.error("Settings submission error:", error);
+
       toast({
         title: "Error",
-        description:
-          error.message || "Failed to save settings. Please try again.",
+        description: `Failed to save settings: ${error.message}`,
         variant: "destructive",
       });
     } finally {

@@ -67,14 +67,17 @@ function createSafeDate(dateInput) {
 
 // Settings Actions
 
+// utils/actions.js
 export async function createUpdateSettings(formData) {
   try {
     // Need to await auth() as it returns a Promise
     const session = await auth();
+    console.log("Auth session:", session); // Debug log
 
     const { userId } = session;
-
     if (!userId) throw new Error("Unauthorized");
+
+    console.log("Attempting to save settings:", formData); // Debug log
 
     const settings = await prisma.userSettings.upsert({
       where: { userId },
@@ -97,10 +100,21 @@ export async function createUpdateSettings(formData) {
       },
     });
 
+    console.log("Settings saved successfully:", settings); // Debug log
+
     revalidatePath("/settings");
     return { success: true, data: settings };
   } catch (error) {
-    return { success: false, error: error.message };
+    console.error("Detailed error in createUpdateSettings:", {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+    });
+
+    return {
+      success: false,
+      error: error.message || "Failed to save settings",
+    };
   }
 }
 
