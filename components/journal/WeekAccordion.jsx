@@ -1,4 +1,15 @@
 // components/journal/WeekAccordion.js
+"use client";
+
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import WeekBar from "./WeekBar";
+import { getLocalDate } from "@/utils/date";
+
 export default function WeekAccordion({
   weeks,
   expandedWeek,
