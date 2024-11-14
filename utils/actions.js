@@ -4,64 +4,18 @@
 import prisma from "@/utils/db";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
+import { getLocalDate } from "@/utils/date";
 
 function createSafeDate(dateInput) {
   try {
-    // If it's already a Date object
-    if (dateInput instanceof Date) {
-      const safeDate = new Date(
-        Date.UTC(
-          dateInput.getFullYear(),
-          dateInput.getMonth(),
-          dateInput.getDate(),
-          12,
-          0,
-          0
-        )
-      );
-
-      return safeDate;
-    }
-
-    // If it's a string
-    if (typeof dateInput === "string") {
-      // Handle ISO string format
-      if (dateInput.includes("T")) {
-        const existingDate = new Date(dateInput);
-        const safeDate = new Date(
-          Date.UTC(
-            existingDate.getFullYear(),
-            existingDate.getMonth(),
-            existingDate.getDate(),
-            12,
-            0,
-            0
-          )
-        );
-
-        return safeDate;
-      }
-
-      // Handle YYYY-MM-DD format
-      const [year, month, day] = dateInput.split("-").map(Number);
-      if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
-        const safeDate = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
-
-        return safeDate;
-      }
-    }
-
-    // If we got here, throw an error
-    throw new Error(`Invalid date format: ${dateInput}`);
+    const localDate = getLocalDate(
+      dateInput instanceof Date ? dateInput : new Date(dateInput)
+    );
+    localDate.setHours(12, 0, 0, 0);
+    return localDate;
   } catch (error) {
     console.error("Error in createSafeDate:", error);
-    // Return current date as fallback
-    const today = new Date();
-    const safeDate = new Date(
-      Date.UTC(today.getFullYear(), today.getMonth(), today.getDate(), 12, 0, 0)
-    );
-
-    return safeDate;
+    return getLocalDate(new Date());
   }
 }
 
@@ -144,7 +98,8 @@ export async function createJournalEntry(formData) {
     }
 
     const userId = session.userId;
-    const entryDate = createSafeDate(formData.date);
+    const entryDate = getLocalDate(formData.date);
+    entryDate.setHours(0, 0, 0, 0);
 
     // Prepare the data object
     const data = {
@@ -220,8 +175,6 @@ export async function createJournalEntry(formData) {
         },
       },
     });
-
-    console.log("Successfully created/updated entry:", entry);
 
     await revalidatePath("/journal");
     return { success: true, data: entry };
@@ -320,8 +273,10 @@ export async function getJournalWeeks() {
       orderBy: { date: "desc" },
     });
 
-    // Get current date at midnight UTC
+    // Get current date in UTC, then convert to local time
     const today = new Date();
+    // Force timezone to match user's timezone
+    today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
     today.setHours(0, 0, 0, 0);
 
     // Calculate start date from surgery date

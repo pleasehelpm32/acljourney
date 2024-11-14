@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { formatDateForUrl, getLocalDate } from "@/utils/date";
 import { useForm, Controller } from "react-hook-form";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -105,11 +106,8 @@ export default function JournalEntryPage({ params }) {
   });
 
   const formatDate = (dateStr) => {
-    // Split the date string into components
     const [year, month, day] = dateStr.split("-").map(Number);
-
-    // Create date using local timezone (months are 0-based in JavaScript)
-    const date = new Date(year, month - 1, day, 12, 0, 0);
+    const date = getLocalDate(new Date(year, month - 1, day));
 
     return date.toLocaleDateString("en-US", {
       weekday: "long",
@@ -287,36 +285,22 @@ export default function JournalEntryPage({ params }) {
   };
 
   const getAdjacentDates = (dateStr) => {
-    // Parse the date string the same way we do elsewhere
     const [year, month, day] = dateStr.split("-").map(Number);
-    const currentDate = new Date(year, month - 1, day);
-    currentDate.setHours(12, 0, 0, 0); // Set to noon to avoid timezone issues
+    const currentDate = getLocalDate(new Date(year, month - 1, day));
+    currentDate.setHours(0, 0, 0, 0);
 
-    // Get previous day
     const prevDate = new Date(currentDate);
     prevDate.setDate(currentDate.getDate() - 1);
 
-    // Get next day
     const nextDate = new Date(currentDate);
     nextDate.setDate(currentDate.getDate() + 1);
-
-    // Use the same formatting function we use elsewhere
-    const formatDateForUrl = (date) => {
-      const year = date.getFullYear();
-      const month = date.getMonth() + 1;
-      const day = date.getDate();
-
-      return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(
-        2,
-        "0"
-      )}`;
-    };
 
     return {
       prevDay: formatDateForUrl(prevDate),
       nextDay: formatDateForUrl(nextDate),
     };
   };
+
   const getPostOpDuration = (surgeryDate) => {
     if (!surgeryDate) return null;
 

@@ -1,6 +1,7 @@
 import { CheckCircle, XCircle, Circle, MinusCircle } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { getLocalDate, formatDateForDisplay } from "@/utils/date";
 
 export default function WeekBar({ entries, startDate }) {
   const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -89,9 +90,9 @@ export default function WeekBar({ entries, startDate }) {
   };
 
   // Get today's date at midnight UTC
-  const today = new Date();
+  const today = getLocalDate(new Date());
   today.setHours(0, 0, 0, 0);
-  const todayStr = today.toISOString().split("T")[0];
+  const todayStr = formatDateForDisplay(today);
 
   return (
     <div className="flex justify-between gap-2 my-6 px-2">

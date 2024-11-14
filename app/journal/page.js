@@ -10,6 +10,7 @@ import { Plus, Save } from "lucide-react";
 import Link from "next/link";
 import { getJournalWeeks } from "@/utils/actions";
 import { useToast } from "@/hooks/use-toast";
+import { formatDateForUrl, getLocalDate } from "@/utils/date";
 
 export default function JournalPage() {
   const [date, setDate] = useState(new Date());
@@ -18,24 +19,7 @@ export default function JournalPage() {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  const formatDateForUrl = (date) => {
-    const d = new Date(date);
-    d.setHours(12, 0, 0, 0); // Set to noon
-
-    const year = d.getFullYear();
-    const month = d.getMonth() + 1;
-    const day = d.getDate();
-
-    const formatted = `${year}-${String(month).padStart(2, "0")}-${String(
-      day
-    ).padStart(2, "0")}`;
-    console.log("Formatting URL date:", { original: date, formatted });
-    return formatted;
-  };
-
-  // Then in your JSX
-  const today = new Date();
-
+  const today = getLocalDate(new Date());
   const formattedToday = formatDateForUrl(today);
 
   useEffect(() => {
@@ -76,11 +60,11 @@ export default function JournalPage() {
 
   const findWeekForDate = (date) => {
     return weeks.find((week) => {
-      const clickedDate = new Date(date);
+      const clickedDate = getLocalDate(date);
       clickedDate.setHours(0, 0, 0, 0);
-      const startDate = new Date(week.startDate);
+      const startDate = getLocalDate(week.startDate);
       startDate.setHours(0, 0, 0, 0);
-      const endDate = new Date(week.endDate);
+      const endDate = getLocalDate(week.endDate);
       endDate.setHours(0, 0, 0, 0);
 
       return clickedDate >= startDate && clickedDate <= endDate;
@@ -102,7 +86,8 @@ export default function JournalPage() {
     const week = findWeekForDate(date);
     if (!week) return null;
 
-    const dayIndex = new Date(date).getDay();
+    const localDate = getLocalDate(date);
+    const dayIndex = localDate.getDay();
     return week.entries[dayIndex];
   };
 
