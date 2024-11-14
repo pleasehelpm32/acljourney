@@ -1,4 +1,3 @@
-// app/journal/page.js
 "use client";
 
 import { useState, useEffect } from "react";
@@ -15,28 +14,16 @@ import {
   formatDateForUrl,
   formatDateForDisplay,
   formatFullDate,
+  isSameDay,
+  getTodayFromUI,
 } from "@/utils/date";
 
 export default function JournalPage() {
-  const [date, setDate] = useState(new Date());
+  const [date, setDate] = useState(getTodayFromUI());
   const [expandedWeeks, setExpandedWeeks] = useState([]);
   const [weeks, setWeeks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-
-  const getTodayFromUI = () => {
-    // Try to get date from button first
-    const buttonDateMatch = document
-      .querySelector("button, a")
-      ?.textContent?.match(/\((\d{4}-\d{2}-\d{2})\)/);
-
-    if (buttonDateMatch) {
-      return getLocalDate(new Date(buttonDateMatch[1]));
-    }
-
-    // Fallback to current date
-    return getLocalDate(new Date());
-  };
 
   const today = getTodayFromUI();
   const formattedToday = formatDateForUrl(today);
@@ -138,7 +125,7 @@ export default function JournalPage() {
         <div className="w-full md:w-auto">
           <Calendar
             mode="single"
-            selected={today}
+            selected={date}
             onSelect={handleDateSelect}
             className="rounded-md border"
             modifiersClassNames={{

@@ -1,4 +1,14 @@
 // components/journal/WeekBar.js
+import { CheckCircle, XCircle, Circle, MinusCircle } from "lucide-react";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
+import {
+  getLocalDate,
+  formatDateForUrl,
+  formatDateForDisplay,
+  isSameDay,
+} from "@/utils/date";
+
 export default function WeekBar({ entries, startDate, currentDate }) {
   const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 

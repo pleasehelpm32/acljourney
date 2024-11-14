@@ -3,19 +3,13 @@
 // Helper to ensure consistent timezone handling
 function createSafeDate(dateInput) {
   const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
-
-  // Ensure we're working with a fresh date object
   const safeDate = new Date(date);
-
-  // Set to noon to avoid any daylight savings issues
   safeDate.setHours(12, 0, 0, 0);
-
   return safeDate;
 }
 
 export function getLocalDate(dateInput) {
-  const date = createSafeDate(dateInput);
-  return date;
+  return createSafeDate(dateInput);
 }
 
 export function formatDateForUrl(dateInput) {
@@ -41,8 +35,8 @@ export function formatFullDate(dateStr) {
   });
 }
 
-// Helper to compare dates (ignoring time)
 export function isSameDay(date1, date2) {
+  if (!date1 || !date2) return false;
   const d1 = createSafeDate(date1);
   const d2 = createSafeDate(date2);
   return (
@@ -50,4 +44,28 @@ export function isSameDay(date1, date2) {
     d1.getMonth() === d2.getMonth() &&
     d1.getDate() === d2.getDate()
   );
+}
+
+export function getTodayFromUI() {
+  try {
+    // Only run querySelector in browser environment
+    if (typeof document !== "undefined") {
+      // Look specifically for the Add Journal Entry button
+      const journalButton = document.querySelector("button, a");
+      const buttonText = journalButton?.textContent || "";
+      const dateMatch = buttonText.match(/\((\d{4}-\d{2}-\d{2})\)/);
+
+      if (dateMatch) {
+        const dateFromButton = new Date(dateMatch[1]);
+        if (!isNaN(dateFromButton.getTime())) {
+          return getLocalDate(dateFromButton);
+        }
+      }
+    }
+  } catch (error) {
+    console.warn("Error getting date from UI:", error);
+  }
+
+  // Fallback to current date
+  return getLocalDate(new Date());
 }
