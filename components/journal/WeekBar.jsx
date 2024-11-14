@@ -12,7 +12,7 @@ import {
 export default function WeekBar({ entries, startDate, currentDate }) {
   const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-  const getStatusClasses = (status, isToday) => {
+  const getStatusClasses = (status, isActive) => {
     const baseClasses = "transition-all duration-200 ease-in-out";
 
     switch (status) {
@@ -37,14 +37,14 @@ export default function WeekBar({ entries, startDate, currentDate }) {
       default:
         return cn(
           baseClasses,
-          isToday
+          isActive
             ? "bg-blue-50 text-blue-500 hover:bg-blue-100 hover:scale-110 cursor-pointer shadow-sm hover:shadow-md ring-1 ring-blue-100 hover:ring-blue-200"
             : "bg-gray-50 text-gray-400 ring-1 ring-gray-200"
         );
     }
   };
 
-  const getStatusIcon = (status, isToday) => {
+  const getStatusIcon = (status, isActive) => {
     const iconProps = {
       className: "h-5 w-5 transition-transform duration-200",
     };
@@ -72,7 +72,7 @@ export default function WeekBar({ entries, startDate, currentDate }) {
           />
         );
       default:
-        return isToday ? (
+        return isActive ? (
           <Circle
             {...iconProps}
             className={cn(iconProps.className, "stroke-[1.5] animate-pulse")}
@@ -95,17 +95,20 @@ export default function WeekBar({ entries, startDate, currentDate }) {
         const date = getLocalDate(startDateLocal);
         date.setDate(date.getDate() + index);
 
-        const isToday = isSameDay(date, currentDate);
+        // Use system date to determine active day
+        const today = new Date();
+        const isActive = isSameDay(date, today);
+
         const status = entries?.[index];
         const isClickable =
-          status === "completed" || status === "missed" || isToday;
+          status === "completed" || status === "missed" || isActive;
 
         const dayContent = (
           <div className="flex flex-col items-center gap-2">
             <span
               className={cn(
                 "text-sm font-medium",
-                isToday ? "text-blue-600" : "text-gray-600"
+                isActive ? "text-blue-600" : "text-gray-600"
               )}
             >
               {day}
@@ -113,10 +116,10 @@ export default function WeekBar({ entries, startDate, currentDate }) {
             <div
               className={cn(
                 "w-10 h-10 rounded-full flex items-center justify-center",
-                getStatusClasses(status, isToday)
+                getStatusClasses(status, isActive)
               )}
             >
-              {getStatusIcon(status, isToday)}
+              {getStatusIcon(status, isActive)}
             </div>
           </div>
         );
