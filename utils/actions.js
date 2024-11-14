@@ -65,56 +65,49 @@ function createSafeDate(dateInput) {
   }
 }
 
-// Settings Actions
-
-// utils/actions.js
 export async function createUpdateSettings(formData) {
   try {
-    // Need to await auth() as it returns a Promise
     const session = await auth();
-    console.log("Auth session:", session); // Debug log
+    console.log("Auth session:", session);
 
     const { userId } = session;
     if (!userId) throw new Error("Unauthorized");
 
-    console.log("Attempting to save settings:", formData); // Debug log
+    // Validate required field
+    if (!formData.surgeryDate) {
+      throw new Error("Surgery date is required");
+    }
+
+    // Sanitize and prepare the data
+    const sanitizedData = {
+      surgeryDate: new Date(formData.surgeryDate), // Required
+      knee: formData.knee || "right", // Provide defaults
+      graftType: formData.graftType || "patellar", // Provide defaults
+      weightBearing: formData.weightBearing || "weight-bearing", // Provide defaults
+      favoriteSport: formData.favoriteSport || null,
+      about: formData.about || null,
+    };
+
+    console.log("Sanitized settings data:", sanitizedData);
 
     const settings = await prisma.userSettings.upsert({
       where: { userId },
-      update: {
-        surgeryDate: new Date(formData.surgeryDate),
-        knee: formData.knee,
-        graftType: formData.graftType,
-        weightBearing: formData.weightBearing,
-        favoriteSport: formData.favoriteSport || null,
-        about: formData.about || null,
-      },
+      update: sanitizedData,
       create: {
         userId,
-        surgeryDate: new Date(formData.surgeryDate),
-        knee: formData.knee,
-        graftType: formData.graftType,
-        weightBearing: formData.weightBearing,
-        favoriteSport: formData.favoriteSport || null,
-        about: formData.about || null,
+        ...sanitizedData,
       },
     });
 
-    console.log("Settings saved successfully:", settings); // Debug log
-
+    console.log("Settings saved:", settings);
     revalidatePath("/settings");
     return { success: true, data: settings };
   } catch (error) {
-    console.error("Detailed error in createUpdateSettings:", {
-      name: error.name,
+    console.error("Settings error:", {
       message: error.message,
       stack: error.stack,
     });
-
-    return {
-      success: false,
-      error: error.message || "Failed to save settings",
-    };
+    return { success: false, error: error.message };
   }
 }
 

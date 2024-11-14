@@ -60,34 +60,40 @@ export default function SettingsPage() {
     loadSettings();
   }, [toast]);
 
-  // app/settings/page.js
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
+      // Validate required field
       if (!surgeryDate) {
         toast({
           title: "Required Field Missing",
           description: "Please select your surgery date",
           variant: "destructive",
         });
+        setIsSubmitting(false);
         return;
       }
 
+      // Prepare the form data
       const formData = {
-        surgeryDate,
-        knee,
-        graftType,
-        weightBearing,
-        favoriteSport,
-        about,
+        surgeryDate: surgeryDate,
+        knee: knee || "right", // Provide defaults
+        graftType: graftType || "patellar", // Provide defaults
+        weightBearing: weightBearing || "weight-bearing", // Provide defaults
+        favoriteSport: favoriteSport?.trim() || null,
+        about: about?.trim() || null,
       };
 
-      console.log("Submitting settings:", formData); // Debug log
+      console.log("Submitting settings:", formData);
 
       const result = await createUpdateSettings(formData);
-      console.log("Settings submission result:", result); // Debug log
+      console.log("Settings result:", result);
+
+      if (!result) {
+        throw new Error("No response from server");
+      }
 
       if (result.success) {
         toast({
@@ -99,10 +105,10 @@ export default function SettingsPage() {
       }
     } catch (error) {
       console.error("Settings submission error:", error);
-
       toast({
         title: "Error",
-        description: `Failed to save settings: ${error.message}`,
+        description:
+          error.message || "Failed to save settings. Please try again.",
         variant: "destructive",
       });
     } finally {
