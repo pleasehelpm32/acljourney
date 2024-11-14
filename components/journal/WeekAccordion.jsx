@@ -1,30 +1,17 @@
-//components/journal/WeekAccordion
-"use client";
-
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import WeekBar from "./WeekBar";
-import { getLocalDate, formatDateForUrl } from "@/utils/date";
-
+// components/journal/WeekAccordion.js
 export default function WeekAccordion({
   weeks,
   expandedWeek,
   setExpandedWeek,
+  currentDate,
 }) {
   return (
     <Accordion
       type="multiple"
       value={expandedWeek}
-      onValueChange={(values) => {
-        setExpandedWeek(values);
-      }}
+      onValueChange={setExpandedWeek}
     >
       {weeks.map((week) => {
-        // Convert dates to local time
         const startDate = getLocalDate(week.startDate);
 
         return (
@@ -33,7 +20,11 @@ export default function WeekAccordion({
               Week {week.number} Post-Op ({week.dateRange})
             </AccordionTrigger>
             <AccordionContent>
-              <WeekBar entries={week.entries} startDate={startDate} />
+              <WeekBar
+                entries={week.entries}
+                startDate={startDate}
+                currentDate={currentDate}
+              />
             </AccordionContent>
           </AccordionItem>
         );

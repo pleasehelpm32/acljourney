@@ -1,25 +1,6 @@
 // components/journal/WeekBar.js
-import { CheckCircle, XCircle, Circle, MinusCircle } from "lucide-react";
-import Link from "next/link";
-import { cn } from "@/lib/utils";
-import {
-  getLocalDate,
-  formatDateForUrl,
-  formatDateForDisplay,
-  isSameDay,
-} from "@/utils/date";
-
-export default function WeekBar({ entries, startDate }) {
+export default function WeekBar({ entries, startDate, currentDate }) {
   const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-  // Extract the date from the Add Journal Entry button format (2024-11-14)
-  const buttonDateMatch = document
-    .querySelector("button, a")
-    ?.textContent?.match(/\((\d{4}-\d{2}-\d{2})\)/);
-
-  const today = buttonDateMatch
-    ? getLocalDate(new Date(buttonDateMatch[1]))
-    : getLocalDate(new Date());
 
   const getStatusClasses = (status, isToday) => {
     const baseClasses = "transition-all duration-200 ease-in-out";
@@ -101,10 +82,10 @@ export default function WeekBar({ entries, startDate }) {
   return (
     <div className="flex justify-between gap-2 my-6 px-2">
       {daysOfWeek.map((day, index) => {
-        const currentDate = getLocalDate(startDateLocal);
-        currentDate.setDate(currentDate.getDate() + index);
+        const date = getLocalDate(startDateLocal);
+        date.setDate(date.getDate() + index);
 
-        const isToday = isSameDay(currentDate, today);
+        const isToday = isSameDay(date, currentDate);
         const status = entries?.[index];
         const isClickable =
           status === "completed" || status === "missed" || isToday;
@@ -136,7 +117,7 @@ export default function WeekBar({ entries, startDate }) {
             className={cn("relative group", isClickable && "hover:z-10")}
           >
             {isClickable ? (
-              <Link href={`/journal/${formatDateForUrl(currentDate)}`}>
+              <Link href={`/journal/${formatDateForUrl(date)}`}>
                 {dayContent}
               </Link>
             ) : (

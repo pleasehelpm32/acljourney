@@ -24,7 +24,21 @@ export default function JournalPage() {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  const today = getLocalDate(new Date());
+  const getTodayFromUI = () => {
+    // Try to get date from button first
+    const buttonDateMatch = document
+      .querySelector("button, a")
+      ?.textContent?.match(/\((\d{4}-\d{2}-\d{2})\)/);
+
+    if (buttonDateMatch) {
+      return getLocalDate(new Date(buttonDateMatch[1]));
+    }
+
+    // Fallback to current date
+    return getLocalDate(new Date());
+  };
+
+  const today = getTodayFromUI();
   const formattedToday = formatDateForUrl(today);
 
   useEffect(() => {
@@ -106,7 +120,6 @@ export default function JournalPage() {
       </div>
     );
   }
-
   return (
     <div className="container mx-auto p-4 max-w-3xl">
       <div className="flex flex-col md:flex-row justify-between items-start gap-6 mb-8">
@@ -125,7 +138,7 @@ export default function JournalPage() {
         <div className="w-full md:w-auto">
           <Calendar
             mode="single"
-            selected={date}
+            selected={today}
             onSelect={handleDateSelect}
             className="rounded-md border"
             modifiersClassNames={{
@@ -138,6 +151,7 @@ export default function JournalPage() {
             modifiers={{
               completed: (date) => getEntryStatus(date) === "completed",
               missed: (date) => getEntryStatus(date) === "missed",
+              today: (date) => isSameDay(date, today),
             }}
           />
         </div>
@@ -146,10 +160,8 @@ export default function JournalPage() {
       <WeekAccordion
         weeks={weeks}
         expandedWeek={expandedWeeks}
-        setExpandedWeek={(values) => {
-          // Directly set the new array of values
-          setExpandedWeeks(values);
-        }}
+        setExpandedWeek={setExpandedWeeks}
+        currentDate={today}
       />
     </div>
   );
