@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import JournalPostOpStats from "@/components/JournalPostOpStats";
 import {
   PlusCircle,
   X,
@@ -385,11 +386,7 @@ export default function JournalEntryPage({ params }) {
           <div className="space-y-1">
             <p className="text-muted-foreground">{formattedDate}</p>
             {surgeryDate && (
-              <div className="flex items-center gap-2 ">
-                <p className="text-md font-medium text-muted-foreground">
-                  {getPostOpDuration(surgeryDate).text}
-                </p>
-              </div>
+              <JournalPostOpStats entryDate={unwrappedParams.date} />
             )}
           </div>
         </div>
