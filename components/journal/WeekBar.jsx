@@ -11,27 +11,23 @@ import {
 export default function WeekBar({ entries, startDate, currentDate }) {
   const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-  // First, find the Sunday of this week
   const weekStartDate = new Date(startDate);
-  const currentDay = weekStartDate.getDay(); // 6 for Saturday
-  const daysFromSunday = currentDay; // 6
-  weekStartDate.setDate(weekStartDate.getDate() - daysFromSunday); // Go back to Sunday
+  weekStartDate.setDate(weekStartDate.getDate() + 1);
+  weekStartDate.setHours(12, 0, 0, 0);
 
-  // Now create the week's dates starting from Sunday
+  // Now just add days from Sunday
   const weekDates = daysOfWeek.map((_, index) => {
     const date = new Date(weekStartDate);
     date.setDate(weekStartDate.getDate() + index);
     return date;
   });
 
-  // Add this debug to see exactly what's happening
+  // Debug to verify
   console.log({
     originalDate: startDate.toString(),
-    currentDay,
-    daysFromSunday,
-    weekStartDate: weekStartDate.toString(),
-    firstDate: weekDates[0].toString(),
-    lastDate: weekDates[6].toString(),
+    nextSunday: weekStartDate.toString(),
+    firstDate: weekDates[0].toString(), // Should be Nov 10
+    lastDate: weekDates[6].toString(), // Should be Nov 16
   });
 
   const getStatusClasses = (status) => {
