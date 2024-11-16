@@ -370,6 +370,7 @@ export async function getJournalWeeks() {
   }
 }
 
+// utils/actions.js
 export async function calculateStreak() {
   try {
     const { userId } = await auth();
@@ -400,21 +401,38 @@ export async function calculateStreak() {
     }
 
     let streak = 0;
-    const today = new Date();
+    const now = new Date();
+    const today = new Date(now);
     today.setHours(0, 0, 0, 0);
 
-    // Convert entries to a Set of date strings for easy lookup
-    const entryDates = new Set(
+    // Yesterday's date for comparison
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    // Convert entries to a Map of date strings for easy lookup
+    const entryDates = new Map(
       entries.map((entry) => {
         const d = new Date(entry.date);
         d.setHours(0, 0, 0, 0);
-        return d.toISOString().split("T")[0];
+        return [d.toISOString().split("T")[0], d];
       })
     );
 
-    // Start checking from today and go backwards
-    let checkDate = new Date(today);
-    checkDate.setHours(0, 0, 0, 0);
+    // Check if yesterday's entry exists
+    const yesterdayStr = yesterday.toISOString().split("T")[0];
+    const hasYesterdayEntry = entryDates.has(yesterdayStr);
+
+    // Check if today's entry exists
+    const todayStr = today.toISOString().split("T")[0];
+    const hasTodayEntry = entryDates.has(todayStr);
+
+    // If it's before midnight and there's no entry for yesterday, reset streak
+    if (!hasYesterdayEntry) {
+      return { success: true, data: 0 };
+    }
+
+    // Start counting streak from yesterday if today isn't complete yet
+    let checkDate = hasTodayEntry ? today : yesterday;
 
     while (true) {
       const dateStr = checkDate.toISOString().split("T")[0];
