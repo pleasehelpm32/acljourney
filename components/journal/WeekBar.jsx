@@ -11,35 +11,29 @@ import {
 export default function WeekBar({ entries, startDate, currentDate }) {
   const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-  // Debug the raw startDate
-  console.log("=== Start Date Debug ===");
-  console.log("Raw startDate prop:", startDate);
-  console.log("Raw startDate as Date:", new Date(startDate));
-  console.log("Raw startDate day of week:", new Date(startDate).getDay());
-  console.log(
-    "Raw startDate day name:",
-    daysOfWeek[new Date(startDate).getDay()]
-  );
-
+  // First create the dates
   const weekStartDate = new Date(startDate);
-  console.log("weekStartDate after creation:", weekStartDate.toString());
-  console.log("weekStartDate day of week:", weekStartDate.getDay());
-  console.log("weekStartDate day name:", daysOfWeek[weekStartDate.getDay()]);
+  weekStartDate.setDate(weekStartDate.getDate() - weekStartDate.getDay());
 
-  // Debug each date in weekDates array
   const weekDates = daysOfWeek.map((_, index) => {
     const date = new Date(weekStartDate);
     date.setDate(weekStartDate.getDate() + index);
-
-    console.log(`Week date ${index}:`, {
-      date: date.toString(),
-      dayOfWeek: date.getDay(),
-      expectedDayName: daysOfWeek[date.getDay()],
-      mappedDayName: daysOfWeek[index],
-      doTheyMatch: daysOfWeek[date.getDay()] === daysOfWeek[index],
-    });
-
     return date;
+  });
+
+  // Then do the logging
+  console.log("=== Start Date Debug ===");
+  console.log("Original startDate:", startDate);
+  console.log("Adjusted weekStartDate:", weekStartDate.toString());
+  console.log("Week starts on:", daysOfWeek[weekStartDate.getDay()]);
+
+  weekDates.forEach((date, index) => {
+    console.log(`Day ${index}:`, {
+      date: date.toString(),
+      dayName: daysOfWeek[date.getDay()],
+      expectedDay: daysOfWeek[index],
+      match: daysOfWeek[date.getDay()] === daysOfWeek[index],
+    });
   });
 
   console.log("=== End Date Debug ===");
@@ -107,23 +101,12 @@ export default function WeekBar({ entries, startDate, currentDate }) {
         );
     }
   };
-
   return (
     <div className="flex justify-between gap-2 my-6 px-2">
       {daysOfWeek.map((day, index) => {
         const status = entries?.[index];
         const isClickable = status === "completed" || status === "missed";
         const currentDateForDay = weekDates[index];
-
-        // Enhanced day-specific debug
-        console.log(`Rendering day ${index}:`, {
-          expectedDay: day,
-          actualDate: currentDateForDay.toString(),
-          actualDayName: daysOfWeek[currentDateForDay.getDay()],
-          match: day === daysOfWeek[currentDateForDay.getDay()],
-          formattedDate: formatDateForUrl(currentDateForDay),
-          status,
-        });
 
         const dayContent = (
           <div className="flex flex-col items-center gap-2">
