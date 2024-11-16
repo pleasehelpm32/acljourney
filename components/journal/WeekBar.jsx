@@ -11,33 +11,28 @@ import {
 export default function WeekBar({ entries, startDate, currentDate }) {
   const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-  // Start with the given startDate
+  // First, find the Sunday of this week
   const weekStartDate = new Date(startDate);
-  weekStartDate.setHours(12, 0, 0, 0);
+  const currentDay = weekStartDate.getDay(); // 6 for Saturday
+  const daysFromSunday = currentDay; // 6
+  weekStartDate.setDate(weekStartDate.getDate() - daysFromSunday); // Go back to Sunday
 
-  // Create dates for the current week
+  // Now create the week's dates starting from Sunday
   const weekDates = daysOfWeek.map((_, index) => {
     const date = new Date(weekStartDate);
-    const adjustment = index - weekStartDate.getDay();
-    date.setDate(weekStartDate.getDate() + adjustment);
+    date.setDate(weekStartDate.getDate() + index);
     return date;
   });
 
-  // Debug logging
-  console.log("=== Start Date Debug ===");
-  console.log("Original startDate:", startDate);
-  console.log("Week reference date:", weekStartDate.toString());
-
-  weekDates.forEach((date, index) => {
-    console.log(`Day ${index}:`, {
-      date: date.toString(),
-      dayName: daysOfWeek[date.getDay()],
-      expectedDay: daysOfWeek[index],
-      match: daysOfWeek[date.getDay()] === daysOfWeek[index],
-    });
+  // Add this debug to see exactly what's happening
+  console.log({
+    originalDate: startDate.toString(),
+    currentDay,
+    daysFromSunday,
+    weekStartDate: weekStartDate.toString(),
+    firstDate: weekDates[0].toString(),
+    lastDate: weekDates[6].toString(),
   });
-
-  console.log("=== End Date Debug ===");
 
   const getStatusClasses = (status) => {
     const baseClasses = "transition-all duration-200 ease-in-out";
