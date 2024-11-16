@@ -75,7 +75,12 @@ export default function PostOpStats() {
                   <span>Surgery date not set</span>
                 </div>
                 <Link href="/settings">
-                  <Button>Go to Settings</Button>
+                  <Button
+                    className=" text-sm md:text-base py-2 bg-silver_c text-black hover:bg-black hover:text-cream transition-all"
+                    size="lg"
+                  >
+                    Go to Settings
+                  </Button>
                 </Link>
               </div>
             </CardContent>

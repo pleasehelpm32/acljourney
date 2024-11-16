@@ -30,7 +30,7 @@ export default function Navbar() {
 
     return (
       <SignInButton mode="modal">
-        <button className="px-4 py-2 rounded-lg bg-darkb text-cream hover:bg-silver_d transition-colors">
+        <button className="px-4 py-2 rounded-lg bg-silver_c hover:text-cream hover:bg-black text-black transition-colors">
           Sign In
         </button>
       </SignInButton>

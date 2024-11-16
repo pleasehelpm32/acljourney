@@ -101,55 +101,91 @@ export default function JournalPage() {
     return (
       <div className="container mx-auto p-4 max-w-3xl flex justify-center items-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-2">
-          <Save className="h-8 w-8 animate-spin text-muted-foreground" />
-          <p className="text-muted-foreground">Loading journal entries...</p>
+          <Save className="h-8 w-8 animate-spin text-darkb" />
+          <p className="text-darkb">Loading journal entries...</p>
         </div>
       </div>
     );
   }
+
   return (
-    <div className="container mx-auto p-4 max-w-3xl">
-      <div className="flex flex-col md:flex-row justify-between items-start gap-6 mb-8">
-        <div className="space-y-4 w-full md:w-auto">
-          <StreakCounter />
-          <Link
-            href={`/journal/${formattedToday}`}
-            className="w-full md:w-auto"
-          >
-            <Button className="w-full md:w-auto my-4">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Journal Entry ({formattedToday})
-            </Button>
-          </Link>
+    <div className="min-h-screen bg-background">
+      {/* Main container with better mobile padding */}
+      <div className="container mx-auto px-4 py-6 md:py-8 max-w-3xl">
+        {/* SEO Heading */}
+        <h1 className="sr-only">ACL Journey - Recovery Journal</h1>
+
+        {/* Top Section with Streak and Add Entry */}
+        <div className="flex flex-col space-y-6 mb-8">
+          {/* Title Section */}
+          <div className="text-center md:text-left">
+            <h2 className="text-2xl md:text-3xl font-bold text-darkb mb-2">
+              Recovery Journal
+            </h2>
+            <p className="text-silver_c text-sm md:text-base">
+              Track your daily progress and milestones
+            </p>
+          </div>
+
+          {/* Streak and Calendar Section */}
+          <div className="flex flex-col lg:flex-row justify-between items-center gap-6">
+            {/* Left Column - Streak & Add Entry */}
+            <div className="w-full lg:w-auto space-y-4">
+              <div className="bg-white rounded-lg p-4 shadow-sm border border-silver_c/20">
+                <h3 className="text-lg font-medium text-darkb mb-3">
+                  Current Progress
+                </h3>
+                <StreakCounter />
+              </div>
+
+              <Link href={`/journal/${formattedToday}`} className="block">
+                <Button
+                  className="w-full bg-silver_c text-black hover:bg-black hover:text-cream transition-all py-6"
+                  size="lg"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Journal Entry ({formattedToday})
+                </Button>
+              </Link>
+            </div>
+
+            {/* Right Column - Calendar */}
+            <div className="w-full lg:w-auto">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={handleDateSelect}
+                className="rounded-lg border border-silver_c/20 bg-white p-3"
+                modifiersClassNames={{
+                  selected:
+                    "border-2 border-darkb text-darkb hover:bg-cream/50 focus:bg-cream/50",
+                  today: "bg-cream text-darkb",
+                  completed: "bg-green-100 text-green-600 font-medium",
+                  missed: "bg-red-100 text-red-600 font-medium",
+                }}
+                modifiers={{
+                  completed: (date) => getEntryStatus(date) === "completed",
+                  missed: (date) => getEntryStatus(date) === "missed",
+                  today: (date) => isSameDay(date, today),
+                }}
+              />
+            </div>
+          </div>
         </div>
-        <div className="w-full md:w-auto">
-          <Calendar
-            mode="single"
-            selected={date}
-            onSelect={handleDateSelect}
-            className="rounded-md border"
-            modifiersClassNames={{
-              selected:
-                "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-              today: "bg-accent text-accent-foreground",
-              completed: "bg-green-100 text-green-600 font-medium",
-              missed: "bg-red-100 text-red-600 font-medium",
-            }}
-            modifiers={{
-              completed: (date) => getEntryStatus(date) === "completed",
-              missed: (date) => getEntryStatus(date) === "missed",
-              today: (date) => isSameDay(date, today),
-            }}
+
+        {/* Weekly Entries Section */}
+        <div className="space-y-4">
+          <h3 className="text-xl font-semibold text-darkb text-center md:text-left">
+            Weekly Entries
+          </h3>
+          <WeekAccordion
+            weeks={weeks}
+            expandedWeek={expandedWeeks}
+            setExpandedWeek={setExpandedWeeks}
+            currentDate={today}
           />
         </div>
       </div>
-
-      <WeekAccordion
-        weeks={weeks}
-        expandedWeek={expandedWeeks}
-        setExpandedWeek={setExpandedWeeks}
-        currentDate={today}
-      />
     </div>
   );
 }

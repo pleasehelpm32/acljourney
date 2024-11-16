@@ -336,78 +336,95 @@ export default function JournalEntryPage({ params }) {
     <RequireSettings>
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="container mx-auto p-4 max-w-3xl space-y-6"
+        className="container mx-auto px-4 py-6 md:py-8 max-w-3xl space-y-6"
       >
-        {/* Header */}
-        <div className="flex flex-col space-y-1.5 mb-6">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <Link href="/journal">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="gap-2"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Back to Journal
-                </Button>
-              </Link>
-            </div>
-            <div className="flex items-center gap-2">
+        {/* Header Section */}
+        <div className="space-y-4 mb-6">
+          {/* Navigation */}
+          <div className="flex flex-col sm:flex-row items-center gap-4 sm:justify-between">
+            <Link href="/journal" className="w-full sm:w-auto">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full sm:w-auto gap-2 text-black hover:bg-silver_c hover:text-black border-silver_c/20"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Journal
+              </Button>
+            </Link>
+
+            <div className="flex items-center gap-2 w-full sm:w-auto">
               <Link
                 href={`/journal/${
                   getAdjacentDates(unwrappedParams.date).prevDay
                 }`}
+                className="flex-1 sm:flex-none"
               >
-                <Button variant="outline" size="sm" className="gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full sm:w-auto gap-1 text-black hover:bg-silver_c hover:text-black border-silver_c/20"
+                >
                   <ChevronLeft className="h-4 w-4" />
-                  Previous Day
+                  <span className="hidden sm:inline">Previous</span>
+                  <span className="sm:hidden">Prev</span>
                 </Button>
               </Link>
 
-              {/* Compare dates after formatting them */}
               {new Date(unwrappedParams.date) <
                 new Date(formatDateForUrl(new Date())) && (
                 <Link
                   href={`/journal/${
                     getAdjacentDates(unwrappedParams.date).nextDay
                   }`}
+                  className="flex-1 sm:flex-none"
                 >
-                  <Button variant="outline" size="sm" className="gap-1">
-                    Next Day
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full sm:w-auto gap-1 text-black hover:bg-silver_c hover:text-black border-silver_c/20"
+                  >
+                    <span className="hidden sm:inline">Next</span>
+                    <span className="sm:hidden">Next</span>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </Link>
               )}
             </div>
           </div>
-          <h1 className="text-3xl font-bold">Journal Entry</h1>
-          <div className="space-y-1">
-            <p className="text-muted-foreground">{formattedDate}</p>
-            {surgeryDate && (
-              <JournalPostOpStats entryDate={unwrappedParams.date} />
-            )}
+
+          {/* Title and Date */}
+          <div className="text-center sm:text-left space-y-2">
+            <h1 className="text-2xl md:text-3xl font-bold text-darkb">
+              Journal Entry
+            </h1>
+            <div className="space-y-1">
+              <p className="text-black text-sm md:text-base">{formattedDate}</p>
+              {surgeryDate && (
+                <JournalPostOpStats entryDate={unwrappedParams.date} />
+              )}
+            </div>
           </div>
         </div>
 
-        <Card>
-          <CardContent className="pt-6 space-y-8">
+        <Card className="border-silver_c/20">
+          <CardContent className="p-4 md:p-6 space-y-8">
             {/* Emotion Selection */}
             <FormSection title="Emotional & Energy Status">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Today I feel...</Label>
-                  <div className="flex justify-between gap-2 md:gap-4">
+              <div className="space-y-6">
+                <div className="space-y-3">
+                  <Label className="text-darkb">Today I feel...</Label>
+                  <div className="grid grid-cols-5 gap-2 md:gap-4">
                     {emotions.map((emoji, index) => (
                       <Button
                         key={index}
                         type="button"
                         variant="outline"
                         className={cn(
-                          "text-2xl h-12 w-12 transition-all hover:scale-105",
+                          "text-2xl h-12 w-full transition-all hover:scale-105 hover:bg-silver_c/20",
                           selectedEmotion === index &&
-                            "border-primary border-2 shadow-md"
+                            "border-darkb border-2 shadow-md"
                         )}
                         onClick={() => setSelectedEmotion(index)}
                       >
@@ -415,22 +432,16 @@ export default function JournalEntryPage({ params }) {
                       </Button>
                     ))}
                   </div>
-
-                  {errors.emotion && (
-                    <p className="text-sm text-red-500 mt-1">
-                      Please select how you feel
-                    </p>
-                  )}
                 </div>
 
-                {/* Energy Level - Updated version */}
-                <div className="space-y-2">
-                  <Label>Energy Level</Label>
+                {/* Energy Level */}
+                <div className="space-y-3">
+                  <Label className="text-darkb">Energy Level</Label>
                   <Controller
                     name="energyLevel"
                     control={control}
                     render={({ field }) => (
-                      <div className="flex justify-between gap-2">
+                      <div className="grid grid-cols-6 gap-2">
                         {levels.map((level) => (
                           <Button
                             key={level}
@@ -438,15 +449,16 @@ export default function JournalEntryPage({ params }) {
                             variant="outline"
                             onClick={() => field.onChange(level)}
                             className={cn(
-                              "h-12 w-12 font-semibold transition-all hover:scale-105",
-                              field.value === level &&
-                                `bg-gradient-to-r ${
-                                  level <= 1
-                                    ? "from-red-500 to-red-600"
-                                    : level <= 3
-                                    ? "from-yellow-500 to-yellow-600"
-                                    : "from-green-500 to-green-600"
-                                } text-white`
+                              "h-12 w-full font-semibold transition-all hover:bg-silver_c/20",
+                              field.value === level
+                                ? `bg-gradient-to-r ${
+                                    level <= 1
+                                      ? "from-red-500 to-red-600"
+                                      : level <= 3
+                                      ? "from-yellow-500 to-yellow-600"
+                                      : "from-green-500 to-green-600"
+                                  } text-white`
+                                : "text-black"
                             )}
                           >
                             {level}
@@ -455,7 +467,7 @@ export default function JournalEntryPage({ params }) {
                       </div>
                     )}
                   />
-                  <div className="flex justify-between text-sm text-muted-foreground">
+                  <div className="flex justify-between text-sm text-black">
                     <span>Very Drained</span>
                     <span>Energized</span>
                   </div>
@@ -463,17 +475,17 @@ export default function JournalEntryPage({ params }) {
               </div>
             </FormSection>
 
-            {/* Physical Status Section */}
+            {/* Physical Status */}
             <FormSection title="Physical Status">
               <div className="space-y-6">
                 {/* Pain Scale */}
-                <div className="space-y-2">
-                  <Label>Knee Pain Level</Label>
+                <div className="space-y-3">
+                  <Label className="text-darkb">Knee Pain Level</Label>
                   <Controller
                     name="painLevel"
                     control={control}
                     render={({ field }) => (
-                      <div className="flex justify-between gap-2">
+                      <div className="grid grid-cols-6 gap-2">
                         {levels.map((level) => (
                           <Button
                             key={level}
@@ -481,15 +493,16 @@ export default function JournalEntryPage({ params }) {
                             variant="outline"
                             onClick={() => field.onChange(level)}
                             className={cn(
-                              "h-12 w-12 font-semibold transition-all hover:scale-105",
-                              field.value === level &&
-                                `bg-gradient-to-r ${
-                                  level >= 4
-                                    ? "from-red-500 to-red-600"
-                                    : level >= 2
-                                    ? "from-yellow-500 to-yellow-600"
-                                    : "from-green-500 to-green-600"
-                                } text-white`
+                              "h-12 w-full font-semibold transition-all hover:bg-silver_c/20",
+                              field.value === level
+                                ? `bg-gradient-to-r ${
+                                    level >= 4
+                                      ? "from-red-500 to-red-600"
+                                      : level >= 2
+                                      ? "from-yellow-500 to-yellow-600"
+                                      : "from-green-500 to-green-600"
+                                  } text-white`
+                                : "text-black"
                             )}
                           >
                             {level}
@@ -498,22 +511,22 @@ export default function JournalEntryPage({ params }) {
                       </div>
                     )}
                   />
-                  <div className="flex justify-between text-sm text-muted-foreground">
+                  <div className="flex justify-between text-sm text-black">
                     <span>None</span>
                     <span>Severe</span>
                   </div>
                 </div>
 
                 {/* Swelling */}
-                <div className="space-y-2">
-                  <Label>Swelling</Label>
+                <div className="space-y-3">
+                  <Label className="text-darkb">Swelling</Label>
                   <Controller
                     name="swelling"
                     control={control}
                     rules={{ required: "Please select swelling level" }}
                     render={({ field }) => (
                       <RadioGroup
-                        className="flex flex-wrap gap-4"
+                        className="grid grid-cols-2 sm:flex sm:flex-wrap gap-4"
                         value={field.value}
                         onValueChange={field.onChange}
                       >
@@ -526,7 +539,10 @@ export default function JournalEntryPage({ params }) {
                               value={option.toLowerCase()}
                               id={option.toLowerCase()}
                             />
-                            <Label htmlFor={option.toLowerCase()}>
+                            <Label
+                              htmlFor={option.toLowerCase()}
+                              className="text-black"
+                            >
                               {option}
                             </Label>
                           </div>
@@ -544,27 +560,21 @@ export default function JournalEntryPage({ params }) {
                 {/* Knee Measurements */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Knee Flexion</Label>
+                    <Label className="text-darkb">Knee Flexion</Label>
                     <Input
                       {...register("kneeFlexion")}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                        }
-                      }}
+                      onKeyDown={handleKeyDown}
                       placeholder="e.g., Full, 130°, Limited to 90°"
+                      className="border-silver_c/20 text-black placeholder:text-gray-400"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Knee Extension</Label>
+                    <Label className="text-darkb">Knee Extension</Label>
                     <Input
                       {...register("kneeExtension")}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                        }
-                      }}
+                      onKeyDown={handleKeyDown}
                       placeholder="e.g., Full, -5°, Limited by 10°"
+                      className="border-silver_c/20 text-black placeholder:text-gray-400"
                     />
                   </div>
                 </div>
@@ -581,14 +591,17 @@ export default function JournalEntryPage({ params }) {
 
             {/* Focus & Self-Care */}
             <FormSection title="Mindset & Well-being">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label>My biggest focus today is</Label>
+              <div className="space-y-6">
+                <div className="space-y-3">
+                  <Label className="text-darkb">
+                    My biggest focus today is
+                  </Label>
                   <Textarea
                     {...register("focus", {
                       required: "Please enter your main focus",
                     })}
                     placeholder="Enter your main focus for today..."
+                    className="border-silver_c/20 text-black placeholder:text-gray-400"
                   />
                   {errors.focus && (
                     <p className="text-sm text-red-500">
@@ -596,11 +609,14 @@ export default function JournalEntryPage({ params }) {
                     </p>
                   )}
                 </div>
-                <div className="space-y-2">
-                  <Label>One thing I am doing for me today is</Label>
+                <div className="space-y-3">
+                  <Label className="text-darkb">
+                    One thing I am doing for me today is
+                  </Label>
                   <Textarea
                     {...register("selfCare")}
                     placeholder="What are you doing for self-care today?"
+                    className="border-silver_c/20 text-black placeholder:text-gray-400"
                   />
                 </div>
               </div>
@@ -608,110 +624,80 @@ export default function JournalEntryPage({ params }) {
 
             {/* Wins & Reflections */}
             <FormSection title="Progress & Reflections">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Wins */}
-                <div className="space-y-4">
-                  <Label>Three Wins Today</Label>
-                  {[0, 1, 2].map((index) => (
-                    <div key={index} className="space-y-2">
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Wins */}
+                  <div className="space-y-4">
+                    <Label className="text-darkb">Three Wins Today</Label>
+                    {[0, 1, 2].map((index) => (
                       <Input
+                        key={index}
                         {...register(`wins.${index}`)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                          }
-                        }}
+                        onKeyDown={handleKeyDown}
                         placeholder={`Win #${index + 1}`}
+                        className="border-silver_c/20 text-black placeholder:text-gray-400"
+                      />
+                    ))}
+                  </div>
+
+                  {/* Reflections */}
+                  <div className="space-y-4">
+                    <Label className="text-darkb">Reflections</Label>
+                    <div className="space-y-4">
+                      <Input
+                        {...register("biggestChallenge")}
+                        onKeyDown={handleKeyDown}
+                        placeholder="What challenged you today?"
+                        className="border-silver_c/20 text-black placeholder:text-gray-400"
+                      />
+                      <Input
+                        {...register("lessonLearned")}
+                        onKeyDown={handleKeyDown}
+                        placeholder="What did you learn?"
+                        className="border-silver_c/20 text-black placeholder:text-gray-400"
+                      />
+                      <Input
+                        {...register("improvement")}
+                        onKeyDown={handleKeyDown}
+                        placeholder="What could be better?"
+                        className="border-silver_c/20 text-black placeholder:text-gray-400"
                       />
                     </div>
-                  ))}
-                </div>
-
-                {/* Reflections */}
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Biggest Challenge</Label>
-                    <Input
-                      {...register("biggestChallenge")}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                        }
-                      }}
-                      placeholder="What challenged you today?"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Lesson Learned</Label>
-                    <Input
-                      {...register("lessonLearned")}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                        }
-                      }}
-                      placeholder="What did you learn?"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Area for Improvement</Label>
-                    <Input
-                      {...register("improvement")}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                        }
-                      }}
-                      placeholder="What could be better?"
-                    />
                   </div>
                 </div>
-              </div>
 
-              <div className="mt-6">
-                <div className="space-y-2">
-                  <Label>Brain Dump</Label>
+                <div className="space-y-3">
+                  <Label className="text-darkb">Brain Dump</Label>
                   <Textarea
                     {...register("brainDump")}
                     placeholder="Use this space for any additional thoughts, feelings, or notes about your day..."
-                    className="min-h-[150px]"
+                    className="min-h-[150px] border-silver_c/20 text-black placeholder:text-gray-400"
                   />
                 </div>
               </div>
             </FormSection>
 
-            {/* Game Plan Section */}
+            {/* Game Plan */}
             <FormSection title="Tomorrow's Game Plan">
-              <div className="space-y-4">
-                <div className="grid gap-4">
-                  {timeBlocks.map((block) => (
-                    <div
-                      key={block.id}
-                      className="grid grid-cols-1 md:grid-cols-5 gap-4 items-center"
-                    >
-                      <div className="md:col-span-1">
-                        <Label className="text-sm font-medium text-muted-foreground">
-                          {block.label}
-                        </Label>
-                      </div>
-                      <div className="md:col-span-4">
-                        <Textarea
-                          {...register(`timeBlockPlans.${block.id}`)}
-                          placeholder={block.placeholder}
-                          className="resize-none"
-                          rows={2}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <div className="space-y-6">
+                {timeBlocks.map((block) => (
+                  <div key={block.id} className="space-y-3">
+                    <Label className="text-darkb">{block.label}</Label>
+                    <Textarea
+                      {...register(`timeBlockPlans.${block.id}`)}
+                      placeholder={block.placeholder}
+                      rows={2}
+                      className="resize-none border-silver_c/20 text-black placeholder:text-gray-400"
+                    />
+                  </div>
+                ))}
               </div>
             </FormSection>
 
             {/* Submit Button */}
             <Button
               type="submit"
-              className="w-full relative"
+              className="w-full bg-silver_c text-black hover:bg-black hover:text-cream transition-all py-6"
               disabled={isSaving}
             >
               {isSaving ? (
@@ -719,13 +705,13 @@ export default function JournalEntryPage({ params }) {
                   <span className="opacity-0">Save Journal Entry</span>
                   <span className="absolute inset-0 flex items-center justify-center gap-2">
                     <Save className="h-4 w-4 animate-spin" />
-                    Saving...
+                    <span>Saving...</span>
                   </span>
                 </>
               ) : (
                 <>
                   <Save className="h-4 w-4 mr-2" />
-                  Save Journal Entry Gang
+                  <span>Save Journal Entry</span>
                 </>
               )}
             </Button>
