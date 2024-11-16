@@ -75,14 +75,25 @@ export default function WeekBar({ entries, startDate, currentDate }) {
     }
   };
 
-  // Normalize start date
-  const startDateLocal = getLocalDate(startDate);
+  const weekStart = new Date(startDate);
+
+  weekStart.setHours(12, 0, 0, 0);
 
   return (
     <div className="flex justify-between gap-2 my-6 px-2">
       {daysOfWeek.map((day, index) => {
-        const date = getLocalDate(startDateLocal);
-        date.setDate(date.getDate() + index);
+        // Create a new date object for each day
+        const date = new Date(weekStart);
+        date.setDate(weekStart.getDate() + index);
+
+        // For debugging in production
+        console.log("Day calculation:", {
+          day,
+          date: date.toString(),
+          formattedDate: formatDateForUrl(date),
+          index,
+          weekStartDate: weekStart.toString(),
+        });
 
         const status = entries?.[index];
         const isClickable = status === "completed" || status === "missed";
