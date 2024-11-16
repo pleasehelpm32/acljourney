@@ -24,16 +24,6 @@ export default function WeekBar({ entries, startDate, currentDate }) {
     return date;
   });
 
-  weekDates.forEach((date, index) => {
-    console.log(`Day ${index}:`, {
-      date: date.toString(),
-      dayName: daysOfWeek[date.getDay()],
-      isToday: formatDateForUrl(date) === formatDateForUrl(today),
-      dateFormatted: formatDateForUrl(date),
-      todayFormatted: formatDateForUrl(today),
-    });
-  });
-
   const getStatusClasses = (status, isActive) => {
     const baseClasses = "transition-all duration-200 ease-in-out";
 

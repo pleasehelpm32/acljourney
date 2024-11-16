@@ -476,3 +476,48 @@ export async function getSurgeryDate() {
     return { success: false, error: error.message };
   }
 }
+
+export async function getPostOpDuration(targetDate = null) {
+  try {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized");
+
+    const settings = await prisma.userSettings.findUnique({
+      where: { userId },
+      select: { surgeryDate: true },
+    });
+
+    if (!settings?.surgeryDate) {
+      return { success: false, error: "Surgery date not set" };
+    }
+
+    // Create date objects and set them to noon to avoid timezone issues
+    const surgery = new Date(settings.surgeryDate);
+    surgery.setHours(12, 0, 0, 0);
+
+    // Use targetDate if provided, otherwise use current date
+    const compareDate = targetDate ? new Date(targetDate) : new Date();
+    compareDate.setHours(12, 0, 0, 0);
+
+    const diffTime = Math.abs(compareDate - surgery);
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const weeks = Math.floor(diffDays / 7);
+    const remainingDays = diffDays % 7;
+
+    return {
+      success: true,
+      data: {
+        weeks,
+        days: remainingDays,
+        text: `${weeks} ${weeks === 1 ? "week" : "weeks"}${
+          remainingDays > 0
+            ? ` and ${remainingDays} ${remainingDays === 1 ? "day" : "days"}`
+            : ""
+        } post-surgery`,
+      },
+    };
+  } catch (error) {
+    console.error("Error calculating post-op duration:", error);
+    return { success: false, error: error.message };
+  }
+}
