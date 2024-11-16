@@ -11,21 +11,21 @@ import {
 export default function WeekBar({ entries, startDate, currentDate }) {
   const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-  // First create the dates
+  // Start with the given startDate
   const weekStartDate = new Date(startDate);
-  weekStartDate.setDate(weekStartDate.getDate() - weekStartDate.getDay());
+  weekStartDate.setHours(12, 0, 0, 0);
 
+  // Create dates for the current week
   const weekDates = daysOfWeek.map((_, index) => {
     const date = new Date(weekStartDate);
-    date.setDate(weekStartDate.getDate() + index);
+    date.setDate(weekStartDate.getDate() + (index - weekStartDate.getDay()));
     return date;
   });
 
-  // Then do the logging
+  // Debug logging
   console.log("=== Start Date Debug ===");
   console.log("Original startDate:", startDate);
-  console.log("Adjusted weekStartDate:", weekStartDate.toString());
-  console.log("Week starts on:", daysOfWeek[weekStartDate.getDay()]);
+  console.log("Week reference date:", weekStartDate.toString());
 
   weekDates.forEach((date, index) => {
     console.log(`Day ${index}:`, {
