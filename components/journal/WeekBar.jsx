@@ -120,36 +120,37 @@ export default function WeekBar({ entries, startDate, currentDate }) {
 
   // Normalize start date
   const startDateLocal = getLocalDate(startDate);
+  const startOfWeek = new Date(startDateLocal);
+  startOfWeek.setDate(startDateLocal.getDate() - startDateLocal.getDay());
 
   return (
     <div className="flex justify-between gap-2 my-6 px-2">
       {daysOfWeek.map((day, index) => {
-        // Create a new date object for each iteration
-        const date = new Date(startDateLocal);
-        // Calculate the correct date by adding the index
-        const targetDate = new Date(
-          date.setDate(startDateLocal.getDate() + index)
-        );
-        // Normalize it
-        const normalizedDate = getLocalDate(targetDate);
+        // Calculate the date for this day
+        const currentDayDate = new Date(startOfWeek);
+        currentDayDate.setDate(startOfWeek.getDate() + index);
 
-        const isActive = isSameDay(normalizedDate, todayFromUI);
+        // Format dates for comparison
+        const currentDayFormatted = formatDateForUrl(currentDayDate);
+        const todayFormatted = formatDateForUrl(todayFromUI);
+
+        // Check if this is the active day
+        const isActive = currentDayFormatted === todayFormatted;
 
         // Debug logging
         console.log(`Day ${index} (${day}) details:`, {
           day,
-          date: normalizedDate.toString(),
-          formattedDate: formatDateForUrl(normalizedDate),
+          date: currentDayDate.toString(),
+          formattedDate: currentDayFormatted,
+          expectedDay: daysOfWeek[currentDayDate.getDay()],
+          actualDay: day,
           isActive,
           todayFromUI: todayFromUI.toString(),
-          currentDate: currentDate?.toString(),
-          dayOfWeek: normalizedDate.getDay(), // Add this to verify day alignment
+          todayFormatted,
           matches: {
-            withTodayFromUI: {
-              matches: isSameDay(normalizedDate, todayFromUI),
-              date1: formatDateForUrl(normalizedDate),
-              date2: formatDateForUrl(todayFromUI),
-            },
+            dateMatch: currentDayFormatted === todayFormatted,
+            dayOfWeek: currentDayDate.getDay(),
+            expectedDayOfWeek: index,
           },
         });
 
@@ -184,9 +185,7 @@ export default function WeekBar({ entries, startDate, currentDate }) {
             className={cn("relative group", isClickable && "hover:z-10")}
           >
             {isClickable ? (
-              <Link href={`/journal/${formatDateForUrl(normalizedDate)}`}>
-                {dayContent}
-              </Link>
+              <Link href={`/journal/${currentDayFormatted}`}>{dayContent}</Link>
             ) : (
               dayContent
             )}
