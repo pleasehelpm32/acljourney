@@ -76,24 +76,38 @@ export default function WeekBar({ entries, startDate, currentDate }) {
   };
 
   const weekStart = new Date(startDate);
-
   weekStart.setHours(12, 0, 0, 0);
 
+  const startDayOfWeek = weekStart.getDay(); // 0 for Sunday, 1 for Monday, etc.
+
+  // Adjust weekStart to the beginning of the week (Sunday)
+  weekStart.setDate(weekStart.getDate() - startDayOfWeek);
   return (
     <div className="flex justify-between gap-2 my-6 px-2">
       {daysOfWeek.map((day, index) => {
-        // Create a new date object for each day
-        const date = new Date(weekStart);
-        date.setDate(weekStart.getDate() + index);
+        // Calculate the date for this day position
+        const currentDate = new Date(weekStart);
+        currentDate.setDate(weekStart.getDate() + index);
 
-        // For debugging in production
+        // For debugging
         console.log("Day calculation:", {
           day,
-          date: date.toString(),
-          formattedDate: formatDateForUrl(date),
+          dayOfWeek: currentDate.getDay(),
+          date: currentDate.toString(),
+          formattedDate: formatDateForUrl(currentDate),
           index,
           weekStartDate: weekStart.toString(),
+          expectedDayName: daysOfWeek[currentDate.getDay()],
         });
+
+        // Verify day alignment
+        if (daysOfWeek[currentDate.getDay()] !== day) {
+          console.warn("Day misalignment detected:", {
+            expectedDay: daysOfWeek[currentDate.getDay()],
+            actualDay: day,
+            date: currentDate.toString(),
+          });
+        }
 
         const status = entries?.[index];
         const isClickable = status === "completed" || status === "missed";
@@ -118,7 +132,7 @@ export default function WeekBar({ entries, startDate, currentDate }) {
             className={cn("relative group", isClickable && "hover:z-10")}
           >
             {isClickable ? (
-              <Link href={`/journal/${formatDateForUrl(date)}`}>
+              <Link href={`/journal/${formatDateForUrl(currentDate)}`}>
                 {dayContent}
               </Link>
             ) : (
