@@ -18,7 +18,8 @@ export default function WeekBar({ entries, startDate, currentDate }) {
   // Create dates for the current week
   const weekDates = daysOfWeek.map((_, index) => {
     const date = new Date(weekStartDate);
-    date.setDate(weekStartDate.getDate() + (index + weekStartDate.getDay()));
+    const adjustment = index - weekStartDate.getDay();
+    date.setDate(weekStartDate.getDate() + adjustment);
     return date;
   });
 
