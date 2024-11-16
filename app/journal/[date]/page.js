@@ -725,7 +725,7 @@ export default function JournalEntryPage({ params }) {
               ) : (
                 <>
                   <Save className="h-4 w-4 mr-2" />
-                  Save Journal Entry
+                  Save Journal Entry Gang
                 </>
               )}
             </Button>
