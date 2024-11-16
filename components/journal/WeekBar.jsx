@@ -75,42 +75,28 @@ export default function WeekBar({ entries, startDate, currentDate }) {
     }
   };
 
-  const weekStart = new Date(startDate);
-  weekStart.setHours(12, 0, 0, 0);
+  // Get dates for the week
+  const weekStartDate = new Date(startDate);
+  const weekDates = daysOfWeek.map((_, index) => {
+    const date = new Date(weekStartDate);
+    date.setDate(weekStartDate.getDate() + index);
+    return date;
+  });
 
-  const startDayOfWeek = weekStart.getDay(); // 0 for Sunday, 1 for Monday, etc.
-
-  // Adjust weekStart to the beginning of the week (Sunday)
-  weekStart.setDate(weekStart.getDate() - startDayOfWeek);
   return (
     <div className="flex justify-between gap-2 my-6 px-2">
       {daysOfWeek.map((day, index) => {
-        // Calculate the date for this day position
-        const currentDate = new Date(weekStart);
-        currentDate.setDate(weekStart.getDate() + index);
-
-        // For debugging
-        console.log("Day calculation:", {
-          day,
-          dayOfWeek: currentDate.getDay(),
-          date: currentDate.toString(),
-          formattedDate: formatDateForUrl(currentDate),
-          index,
-          weekStartDate: weekStart.toString(),
-          expectedDayName: daysOfWeek[currentDate.getDay()],
-        });
-
-        // Verify day alignment
-        if (daysOfWeek[currentDate.getDay()] !== day) {
-          console.warn("Day misalignment detected:", {
-            expectedDay: daysOfWeek[currentDate.getDay()],
-            actualDay: day,
-            date: currentDate.toString(),
-          });
-        }
-
         const status = entries?.[index];
         const isClickable = status === "completed" || status === "missed";
+        const currentDateForDay = weekDates[index];
+
+        // Debug log
+        console.log("Day info:", {
+          day,
+          date: currentDateForDay.toString(),
+          formattedDate: formatDateForUrl(currentDateForDay),
+          status,
+        });
 
         const dayContent = (
           <div className="flex flex-col items-center gap-2">
@@ -132,7 +118,7 @@ export default function WeekBar({ entries, startDate, currentDate }) {
             className={cn("relative group", isClickable && "hover:z-10")}
           >
             {isClickable ? (
-              <Link href={`/journal/${formatDateForUrl(currentDate)}`}>
+              <Link href={`/journal/${formatDateForUrl(currentDateForDay)}`}>
                 {dayContent}
               </Link>
             ) : (
