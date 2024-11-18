@@ -1,3 +1,4 @@
+//components/PostOpStats
 "use client";
 
 import { useEffect, useState } from "react";
@@ -35,48 +36,57 @@ export default function PostOpStats() {
     );
   }
 
-  // If no stats are available, show placeholder with settings link
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-32">
+        <Loader2 className="h-6 w-6 animate-spin text-darkb" />
+      </div>
+    );
+  }
+
   if (!postOpStats) {
     return (
-      <div className="space-y-3">
-        <h3 className="text-lg font-medium text-muted-foreground">
+      <div className="space-y-4">
+        <h3 className="text-xl font-semibold text-darkb text-center md:text-left">
           Recovery Timeline
         </h3>
-        <div className="grid grid-cols-2 gap-4">
-          <Card className="relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/10" />
-            <CardContent className="p-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Card className="relative overflow-hidden border-silver_c/20 shadow-lg hover:shadow-xl transition-shadow">
+            <CardContent className="p-4 md:p-6">
               <div className="flex flex-col items-center justify-center space-y-2">
-                <span className="text-4xl font-bold text-primary">?</span>
-                <span className="text-sm text-muted-foreground font-medium">
+                <span className="text-3xl md:text-4xl font-bold text-darkb">
+                  ?
+                </span>
+                <span className="text-sm md:text-base text-silver_c font-medium">
                   Weeks
                 </span>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/10" />
-            <CardContent className="p-6">
+          <Card className="relative overflow-hidden border-silver_c/20 shadow-lg hover:shadow-xl transition-shadow">
+            <CardContent className="p-4 md:p-6">
               <div className="flex flex-col items-center justify-center space-y-2">
-                <span className="text-4xl font-bold text-primary">?</span>
-                <span className="text-sm text-muted-foreground font-medium">
+                <span className="text-3xl md:text-4xl font-bold text-darkb">
+                  ?
+                </span>
+                <span className="text-sm md:text-base text-silver_c font-medium">
                   Days
                 </span>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="col-span-2 relative overflow-hidden border-dashed border-primary/50">
-            <CardContent className="p-6">
+          <Card className="col-span-1 sm:col-span-2 relative overflow-hidden border-silver_c/20">
+            <CardContent className="p-4 md:p-6">
               <div className="flex flex-col items-center justify-center space-y-4">
-                <div className="flex items-center gap-2 text-muted-foreground">
+                <div className="flex items-center gap-2 text-silver_c">
                   <AlertCircle className="h-5 w-5" />
                   <span>Surgery date not set</span>
                 </div>
-                <Link href="/settings">
+                <Link href="/settings" className="w-full sm:w-auto">
                   <Button
-                    className=" text-sm md:text-base py-2 bg-silver_c text-black hover:bg-black hover:text-cream transition-all"
+                    className="w-full sm:w-auto text-sm md:text-base py-2 bg-silver_c text-black hover:bg-black hover:text-cream transition-all"
                     size="lg"
                   >
                     Go to Settings
@@ -91,33 +101,31 @@ export default function PostOpStats() {
   }
 
   return (
-    <div className="space-y-3">
-      <h3 className="text-lg font-medium text-muted-foreground">
+    <div className="space-y-4">
+      <h3 className="text-xl font-semibold text-darkb text-center md:text-left">
         Recovery Timeline
       </h3>
-      <div className="grid grid-cols-2 gap-4">
-        <Card className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/10" />
-          <CardContent className="p-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Card className="relative overflow-hidden border-silver_c/20">
+          <CardContent className="p-4 md:p-6">
             <div className="flex flex-col items-center justify-center space-y-2">
-              <span className="text-4xl font-bold text-primary">
+              <span className="text-3xl md:text-4xl font-bold text-darkb">
                 {postOpStats.weeks}
               </span>
-              <span className="text-sm text-muted-foreground font-medium">
+              <span className="text-sm md:text-base text-silver_c font-medium">
                 {postOpStats.weeks === 1 ? "Week" : "Weeks"}
               </span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/10" />
-          <CardContent className="p-6">
+        <Card className="relative overflow-hidden border-silver_c/20">
+          <CardContent className="p-4 md:p-6">
             <div className="flex flex-col items-center justify-center space-y-2">
-              <span className="text-4xl font-bold text-primary">
+              <span className="text-3xl md:text-4xl font-bold text-darkb">
                 {postOpStats.days}
               </span>
-              <span className="text-sm text-muted-foreground font-medium">
+              <span className="text-sm md:text-base text-silver_c font-medium">
                 {postOpStats.days === 1 ? "Day" : "Days"}
               </span>
             </div>

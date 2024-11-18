@@ -1,15 +1,7 @@
-// app/settings/page.js
 "use client";
-
 import React, { useState, useEffect } from "react";
 import SurgeryDate from "@/components/SurgeryDate";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import KneeSelector from "@/components/KneeSelector";
 import GraftTypeSelect from "@/components/GraftTypeSelect";
@@ -18,7 +10,7 @@ import ProfileForm from "@/components/ProfileForm";
 import { Button } from "@/components/ui/button";
 import { createUpdateSettings, getSettings } from "@/utils/actions";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Save } from "lucide-react";
 
 export default function SettingsPage() {
   const [surgeryDate, setSurgeryDate] = useState(null);
@@ -65,7 +57,6 @@ export default function SettingsPage() {
     setIsSubmitting(true);
 
     try {
-      // Validate required field
       if (!surgeryDate) {
         toast({
           title: "Required Field Missing",
@@ -76,20 +67,16 @@ export default function SettingsPage() {
         return;
       }
 
-      // Prepare the form data
       const formData = {
         surgeryDate: surgeryDate,
-        knee: knee || "right", // Provide defaults
-        graftType: graftType || "patellar", // Provide defaults
-        weightBearing: weightBearing || "weight-bearing", // Provide defaults
+        knee: knee || "right",
+        graftType: graftType || "patellar",
+        weightBearing: weightBearing || "weight-bearing",
         favoriteSport: favoriteSport?.trim() || null,
         about: about?.trim() || null,
       };
 
-      console.log("Submitting settings:", formData);
-
       const result = await createUpdateSettings(formData);
-      console.log("Settings result:", result);
 
       if (!result) {
         throw new Error("No response from server");
@@ -118,73 +105,98 @@ export default function SettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8 flex justify-center items-center min-h-[60vh]">
+      <div className="container mx-auto p-4 min-h-[60vh] flex items-center justify-center">
         <div className="flex flex-col items-center gap-2">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          <p className="text-muted-foreground">Loading settings...</p>
+          <Save className="h-8 w-8 animate-spin text-darkb" />
+          <p className="text-darkb">Loading settings...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <form onSubmit={handleSubmit}>
-        <Card className="max-w-2xl mx-auto">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold">
-              Profile Settings
-            </CardTitle>
-            <CardDescription>
-              Configure your ACL recovery profile and preferences
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium">Surgery Details</h3>
-                <span className="text-sm text-muted-foreground">
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-6 md:py-8 max-w-3xl">
+        {/* SEO Heading */}
+        <h1 className="sr-only">ACL Journey - Profile Settings</h1>
+
+        {/* Title Section */}
+        <div className="text-center md:text-left mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold text-darkb mb-2">
+            Profile Settings
+          </h2>
+          <p className="text-silver_c text-sm md:text-base">
+            Configure your ACL recovery profile and preferences
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Surgery Details Card */}
+          <Card className="border-silver_c/20">
+            <CardHeader>
+              <CardTitle className="text-lg font-medium text-darkb flex justify-between items-center">
+                Surgery Details
+                <span className="text-sm text-silver_c font-normal">
                   * Surgery date required
                 </span>
-              </div>
-              <Separator />
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
               <SurgeryDate
                 value={surgeryDate}
                 onChange={setSurgeryDate}
                 required
               />
+              <Separator className="bg-silver_c/20" />
               <KneeSelector value={knee} onChange={setKnee} />
+              <Separator className="bg-silver_c/20" />
               <GraftTypeSelect value={graftType} onChange={setGraftType} />
+              <Separator className="bg-silver_c/20" />
               <WeightBearingStatus
                 value={weightBearing}
                 onChange={setWeightBearing}
               />
-            </div>
+            </CardContent>
+          </Card>
 
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Personal Details</h3>
-              <Separator />
+          {/* Personal Details Card */}
+          <Card className="border-silver_c/20">
+            <CardHeader>
+              <CardTitle className="text-lg font-medium text-darkb">
+                Personal Details
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
               <ProfileForm
                 favoriteSport={favoriteSport}
                 about={about}
                 onSportChange={setFavoriteSport}
                 onAboutChange={setAbout}
               />
-            </div>
+            </CardContent>
+          </Card>
 
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                "Save Settings"
-              )}
-            </Button>
-          </CardContent>
-        </Card>
-      </form>
+          {/* Save Button */}
+          <Button
+            type="submit"
+            className="w-full bg-silver_c text-black hover:bg-black hover:text-cream transition-all py-6"
+            size="lg"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving Changes...
+              </>
+            ) : (
+              <>
+                <Save className="mr-2 h-4 w-4" />
+                Save Settings
+              </>
+            )}
+          </Button>
+        </form>
+      </div>
     </div>
   );
 }
