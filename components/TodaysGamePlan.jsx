@@ -8,10 +8,14 @@ import { Save, Clock, Edit2, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function TodaysGamePlan() {
-  const [plans, setPlans] = useState(null);
+  const [plans, setPlans] = useState({
+    morning: "",
+    midDay: "",
+    afternoon: "",
+    evening: "",
+  });
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   const timeBlocks = [
@@ -33,25 +37,21 @@ export default function TodaysGamePlan() {
     async function loadPlans() {
       try {
         const yesterdayDate = getYesterdayDate();
+        console.log("Fetching plans for:", yesterdayDate);
+
         const result = await getJournalEntry(yesterdayDate);
+        console.log("Fetched journal entry:", result);
 
         if (result.success && result.data) {
-          const planData = {
-            morning: result.data.morningPlan,
-            midDay: result.data.middayPlan,
-            afternoon: result.data.afternoonPlan,
-            evening: result.data.eveningPlan,
-          };
-
-          // Only set plans if at least one block has content
-          if (Object.values(planData).some((plan) => plan)) {
-            setPlans(planData);
-          }
+          setPlans({
+            morning: result.data.morningPlan || "",
+            midDay: result.data.middayPlan || "",
+            afternoon: result.data.afternoonPlan || "",
+            evening: result.data.eveningPlan || "",
+          });
         }
       } catch (error) {
         console.error("Error loading plans:", error);
-      } finally {
-        setIsLoading(false);
       }
     }
 
@@ -83,6 +83,7 @@ export default function TodaysGamePlan() {
         throw new Error(result.error || "Failed to update game plan");
       }
     } catch (error) {
+      console.error("Save error:", error);
       toast({
         title: "Error",
         description: "Failed to update game plan. Please try again.",
@@ -92,9 +93,6 @@ export default function TodaysGamePlan() {
       setIsSaving(false);
     }
   };
-
-  if (isLoading) return null;
-  if (!plans) return null; // Don't show anything if no plans exist
 
   return (
     <div className="space-y-4">
@@ -140,7 +138,7 @@ export default function TodaysGamePlan() {
                 </h3>
                 {isEditing ? (
                   <Textarea
-                    value={plans[block.id] || ""}
+                    value={plans[block.id]}
                     onChange={(e) =>
                       setPlans((prev) => ({
                         ...prev,
