@@ -9,20 +9,8 @@ import {
   formatDateForUrl,
   formatDateForDisplay,
   formatFullDate,
+  createSafeDate,
 } from "@/utils/date";
-
-function createSafeDate(dateInput) {
-  try {
-    const localDate = getLocalDate(
-      dateInput instanceof Date ? dateInput : new Date(dateInput)
-    );
-    localDate.setHours(12, 0, 0, 0);
-    return localDate;
-  } catch (error) {
-    console.error("Error in createSafeDate:", error);
-    return getLocalDate(new Date());
-  }
-}
 
 export async function createUpdateSettings(formData) {
   try {
@@ -88,25 +76,17 @@ export async function getSettings() {
 export async function createJournalEntry(formData) {
   console.log("Starting createJournalEntry with formData:", formData);
 
-  // Early validation
-  if (!formData || typeof formData !== "object") {
-    console.error("Invalid form data received:", formData);
-    return { success: false, error: "Invalid form data" };
-  }
-
   try {
     const session = await auth();
-
     if (!session?.userId) {
-      console.error("No user ID found in session");
       return { success: false, error: "Authentication required" };
     }
 
     const userId = session.userId;
     const entryDate = getLocalDate(formData.date);
-    entryDate.setHours(0, 0, 0, 0);
+    entryDate.setHours(12, 0, 0, 0); // Set to noon to avoid timezone issues
 
-    // Prepare the data object
+    // Prepare the data object - make sure field names match your Prisma schema
     const data = {
       emotion: formData.selectedEmotion,
       energyLevel: formData.energyLevel,
@@ -114,16 +94,16 @@ export async function createJournalEntry(formData) {
       swelling: formData.swelling,
       kneeFlexion: formData.kneeFlexion,
       kneeExtension: formData.kneeExtension,
-      dailyFocus: formData.focus,
+      dailyFocus: formData.focus, // Note: focus is saved as dailyFocus in DB
       selfCare: formData.selfCare,
       biggestChallenge: formData.biggestChallenge,
       lessonLearned: formData.lessonLearned,
       improvement: formData.improvement,
       brainDump: formData.brainDump,
-      morningPlan: formData.timeBlockPlans?.morning ?? null,
-      middayPlan: formData.timeBlockPlans?.midDay ?? null,
-      afternoonPlan: formData.timeBlockPlans?.afternoon ?? null,
-      eveningPlan: formData.timeBlockPlans?.evening ?? null,
+      morningPlan: formData.timeBlockPlans?.morning,
+      middayPlan: formData.timeBlockPlans?.midDay,
+      afternoonPlan: formData.timeBlockPlans?.afternoon,
+      eveningPlan: formData.timeBlockPlans?.evening,
     };
 
     console.log("Prepared data for upsert:", { userId, entryDate, data });
@@ -179,31 +159,29 @@ export async function createJournalEntry(formData) {
             : [],
         },
       },
+      // Important: Include related data in the return
+      include: {
+        rehabTasks: true,
+        wins: true,
+      },
     });
 
-    await revalidatePath("/journal");
+    console.log("Saved entry:", entry);
     return { success: true, data: entry };
   } catch (error) {
-    console.error("Error in createJournalEntry:", {
-      name: error?.name,
-      message: error?.message,
-      stack: error?.stack,
-    });
-
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to save journal entry",
-    };
+    console.error("Error in createJournalEntry:", error);
+    return { success: false, error: error.message };
   }
 }
+
 export async function getJournalEntry(date) {
   try {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
 
-    // Use the timezone-safe date creation
+    // Use createSafeDate to handle the date consistently
     const entryDate = createSafeDate(date);
+    console.log("Fetching journal entry for date:", entryDate);
 
     const entry = await prisma.journalEntry.findUnique({
       where: {
@@ -226,8 +204,10 @@ export async function getJournalEntry(date) {
       },
     });
 
+    console.log("Found entry:", entry);
     return { success: true, data: entry };
   } catch (error) {
+    console.error("Error in getJournalEntry:", error);
     return { success: false, error: error.message };
   }
 }

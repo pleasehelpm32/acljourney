@@ -1,17 +1,24 @@
 // utils/date.js
 
-// Helper to ensure consistent timezone handling
-function createSafeDate(dateInput) {
-  const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
-  const safeDate = new Date(date);
-  safeDate.setHours(12, 0, 0, 0);
-  return safeDate;
+export function createSafeDate(dateInput) {
+  try {
+    const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
+    // Set to noon to avoid timezone issues
+    date.setHours(12, 0, 0, 0);
+    return date;
+  } catch (error) {
+    console.error("Error in createSafeDate:", error);
+    const now = new Date();
+    now.setHours(12, 0, 0, 0);
+    return now;
+  }
 }
 
-export function getLocalDate(dateInput) {
-  return createSafeDate(dateInput);
+export function getLocalDate(date) {
+  const d = new Date(date);
+  d.setHours(12, 0, 0, 0);
+  return d;
 }
-
 export function formatDateForUrl(dateInput) {
   const date = createSafeDate(dateInput);
   const year = date.getFullYear();

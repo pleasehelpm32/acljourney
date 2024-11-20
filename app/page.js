@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
 import MediumArticlesCarousel from "@/components/MediumArticlesCarousel";
 import { Plus, BarChart3, Loader2 } from "lucide-react";
-
+import TodaysGamePlan from "@/components/TodaysGamePlan";
 function formatDateForUrl(date) {
   const d = new Date(date);
   d.setHours(12, 0, 0, 0);
@@ -63,6 +63,7 @@ export default function HomePage() {
           <div className="w-full bg-cream rounded-3xl shadow-lg border-4 border-darkb/30 p-6 md:p-8">
             <PostOpStats />
           </div>
+          <TodaysGamePlan />
 
           {/* Journal Section */}
           <div className="space-y-4">

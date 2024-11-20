@@ -43,9 +43,6 @@ import {
 
 export default function JournalEntryPage({ params }) {
   const unwrappedParams = React.use(params);
-
-  // Form handling with validation
-
   const [selectedEmotion, setSelectedEmotion] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const emotions = ["😭", "🙁", "😐", "🙂", "😃"];
@@ -57,6 +54,8 @@ export default function JournalEntryPage({ params }) {
   const rehabTasksRef = useRef(null);
   const { toast } = useToast();
   const [surgeryDate, setSurgeryDate] = useState(null);
+  const focusFieldRef = useRef(null);
+  const swellingFieldRef = useRef(null);
   const timeBlocks = [
     {
       id: "morning",
@@ -108,9 +107,24 @@ export default function JournalEntryPage({ params }) {
         afternoon: "",
         evening: "",
       },
+      mode: "onTouched",
     },
   });
-
+  const scrollToError = () => {
+    const firstError = Object.keys(errors)[0];
+    if (firstError === "focus" && focusFieldRef.current) {
+      focusFieldRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+      focusFieldRef.current.focus();
+    } else if (firstError === "swelling" && swellingFieldRef.current) {
+      swellingFieldRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
+  };
   const formatDate = (dateStr) => {
     const [year, month, day] = dateStr.split("-").map(Number);
     const date = getLocalDate(new Date(year, month - 1, day));
@@ -124,52 +138,59 @@ export default function JournalEntryPage({ params }) {
   };
 
   const formattedDate = formatDate(unwrappedParams.date);
+
   useEffect(() => {
     async function loadJournalEntry() {
       try {
         setIsLoading(true);
 
-        // Load both journal entry and settings in parallel
         const [journalResult, settingsResult] = await Promise.all([
           getJournalEntry(unwrappedParams.date),
           getSettings(),
         ]);
 
-        // Handle journal entry data
+        console.log("Loaded journal entry:", journalResult);
+
         if (journalResult.success && journalResult.data) {
           const entry = journalResult.data;
           setJournalData(entry);
 
-          // Reset form with existing data
+          // Reset form with loaded data - note the field name mappings
           reset({
-            energyLevel: entry.energyLevel ?? null,
-            painLevel: entry.painLevel ?? null,
-            swelling: entry.swelling ?? null,
-            kneeFlexion: entry.kneeFlexion ?? "",
-            kneeExtension: entry.kneeExtension ?? "",
-            focus: entry.dailyFocus ?? "",
-            selfCare: entry.selfCare ?? "",
-            biggestChallenge: entry.biggestChallenge ?? "",
-            lessonLearned: entry.lessonLearned ?? "",
-            improvement: entry.improvement ?? "",
-            brainDump: entry.brainDump ?? "",
+            energyLevel: entry.energyLevel,
+            painLevel: entry.painLevel,
+            swelling: entry.swelling,
+            kneeFlexion: entry.kneeFlexion || "",
+            kneeExtension: entry.kneeExtension || "",
+            focus: entry.dailyFocus || "", // Note: dailyFocus in DB maps to focus in form
+            selfCare: entry.selfCare || "",
+            biggestChallenge: entry.biggestChallenge || "",
+            lessonLearned: entry.lessonLearned || "",
+            improvement: entry.improvement || "",
+            brainDump: entry.brainDump || "",
             timeBlockPlans: {
-              morning: entry.morningPlan ?? "",
-              midDay: entry.middayPlan ?? "",
-              afternoon: entry.afternoonPlan ?? "",
-              evening: entry.eveningPlan ?? "",
+              morning: entry.morningPlan || "",
+              midDay: entry.middayPlan || "",
+              afternoon: entry.afternoonPlan || "",
+              evening: entry.eveningPlan || "",
             },
-            wins: entry.wins?.map((w) => w.win ?? "") || ["", "", ""],
+            wins: entry.wins?.map((w) => w.win || "") || ["", "", ""],
           });
 
-          setSelectedEmotion(entry.emotion ?? null);
+          // Set emotion state separately
+          setSelectedEmotion(entry.emotion);
+
+          // Set rehab tasks if you're using a ref
+          if (rehabTasksRef.current && entry.rehabTasks) {
+            rehabTasksRef.current.setTasks(entry.rehabTasks);
+          }
         }
 
-        // Handle settings data for surgery date
         if (settingsResult.success && settingsResult.data) {
           setSurgeryDate(settingsResult.data.surgeryDate);
         }
       } catch (error) {
+        console.error("Error loading journal entry:", error);
         toast({
           title: "Error",
           description: "Failed to load journal entry.",
@@ -180,29 +201,30 @@ export default function JournalEntryPage({ params }) {
       }
     }
 
-    loadJournalEntry();
+    if (unwrappedParams.date) {
+      loadJournalEntry();
+    }
   }, [unwrappedParams.date, reset, toast]);
 
   const onSubmit = async (data) => {
-    if (isSaving) return; // Prevent double submission
+    if (isSaving) return;
 
     try {
       setIsSaving(true);
 
-      // Validate date
       if (!unwrappedParams?.date) {
         throw new Error("Invalid date");
       }
 
-      // Get tasks
+      // Get tasks from ref
       const tasks = rehabTasksRef.current?.getTasks() || [];
 
-      // Prepare form data
+      // Prepare form data with all fields
       const formData = {
         date: unwrappedParams.date,
         selectedEmotion,
-        energyLevel: data.energyLevel ?? null,
-        painLevel: data.painLevel ?? null,
+        energyLevel: data.energyLevel,
+        painLevel: data.painLevel,
         swelling: data.swelling || null,
         kneeFlexion: data.kneeFlexion || null,
         kneeExtension: data.kneeExtension || null,
@@ -229,26 +251,30 @@ export default function JournalEntryPage({ params }) {
           title: "Success!",
           description: "Journal entry saved successfully.",
         });
+
+        // Redirect to journal page
         router.push("/journal");
       } else {
         throw new Error(result?.error || "Failed to save journal entry");
       }
-      return result;
     } catch (error) {
       console.error("Form submission error:", error);
-
       toast({
         title: "Error",
         description:
-          error instanceof Error
-            ? error.message
-            : "Failed to save journal entry. Please try again.",
+          error.message || "Failed to save journal entry. Please try again.",
         variant: "destructive",
       });
     } finally {
       setIsSaving(false);
     }
   };
+
+  const onError = (errors) => {
+    console.log("Form errors:", errors);
+    scrollToError();
+  };
+
   // Form section component for better organization
   const FormSection = ({ title, children, className }) => (
     <div className={cn("space-y-4", className)}>
@@ -335,7 +361,7 @@ export default function JournalEntryPage({ params }) {
   return (
     <RequireSettings>
       <form
-        onSubmit={handleSubmit(onSubmit)}
+        onSubmit={handleSubmit(onSubmit, onError)}
         className="container mx-auto px-4 py-6 md:py-8 max-w-3xl space-y-6"
       >
         {/* Header Section */}
@@ -518,43 +544,46 @@ export default function JournalEntryPage({ params }) {
                 </div>
 
                 {/* Swelling */}
-                <div className="space-y-3">
+                <div className="space-y-3" ref={swellingFieldRef}>
                   <Label className="text-darkb">Swelling</Label>
                   <Controller
                     name="swelling"
                     control={control}
                     rules={{ required: "Please select swelling level" }}
                     render={({ field }) => (
-                      <RadioGroup
-                        className="grid grid-cols-2 sm:flex sm:flex-wrap gap-4"
-                        value={field.value}
-                        onValueChange={field.onChange}
-                      >
-                        {swellingOptions.map((option) => (
-                          <div
-                            key={option}
-                            className="flex items-center space-x-2"
-                          >
-                            <RadioGroupItem
-                              value={option.toLowerCase()}
-                              id={option.toLowerCase()}
-                            />
-                            <Label
-                              htmlFor={option.toLowerCase()}
-                              className="text-black"
+                      <div className="space-y-3">
+                        <RadioGroup
+                          className="grid grid-cols-2 sm:flex sm:flex-wrap gap-4"
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          {swellingOptions.map((option) => (
+                            <div
+                              key={option}
+                              className="flex items-center space-x-2"
                             >
-                              {option}
-                            </Label>
+                              <RadioGroupItem
+                                value={option.toLowerCase()}
+                                id={option.toLowerCase()}
+                              />
+                              <Label
+                                htmlFor={option.toLowerCase()}
+                                className="text-black"
+                              >
+                                {option}
+                              </Label>
+                            </div>
+                          ))}
+                        </RadioGroup>
+                        {errors.swelling && (
+                          <div className="text-sm text-red-500 flex items-center gap-2">
+                            <AlertCircle className="h-4 w-4" />
+                            {errors.swelling.message}
                           </div>
-                        ))}
-                      </RadioGroup>
+                        )}
+                      </div>
                     )}
                   />
-                  {errors.swelling && (
-                    <p className="text-sm text-red-500">
-                      {errors.swelling.message}
-                    </p>
-                  )}
                 </div>
 
                 {/* Knee Measurements */}
@@ -592,21 +621,28 @@ export default function JournalEntryPage({ params }) {
             {/* Focus & Self-Care */}
             <FormSection title="Mindset & Well-being">
               <div className="space-y-6">
-                <div className="space-y-3">
+                <div className="space-y-3" ref={focusFieldRef}>
                   <Label className="text-darkb">
                     My biggest focus today is
                   </Label>
                   <Textarea
                     {...register("focus", {
                       required: "Please enter your main focus",
+                      onChange: (e) => {
+                        e.target.value = e.target.value; // Prevent default behavior
+                      },
                     })}
                     placeholder="Enter your main focus for today..."
-                    className="border-silver_c/20 text-black placeholder:text-gray-400"
+                    className={cn(
+                      "border-silver_c/20 text-black placeholder:text-gray-400",
+                      errors.focus && "border-red-500 focus:border-red-500"
+                    )}
                   />
                   {errors.focus && (
-                    <p className="text-sm text-red-500">
+                    <div className="text-sm text-red-500 flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4" />
                       {errors.focus.message}
-                    </p>
+                    </div>
                   )}
                 </div>
                 <div className="space-y-3">
