@@ -266,8 +266,7 @@ export async function calculateStreak() {
     }
 
     const today = createSafeDate(new Date());
-    const yesterday = createSafeDate(new Date(today));
-    yesterday.setDate(yesterday.getDate() - 1);
+    const todayStr = today.toISOString().split("T")[0];
 
     const entryDates = new Map(
       entries.map((entry) => [
@@ -276,31 +275,34 @@ export async function calculateStreak() {
       ])
     );
 
-    const hasYesterdayEntry = entryDates.has(
-      yesterday.toISOString().split("T")[0]
-    );
-
-    if (!hasYesterdayEntry) {
-      return { success: true, data: 0 };
-    }
-
     let streak = 0;
-    let checkDate = today;
+    let checkDate = new Date(today);
     const surgeryDate = createSafeDate(userSettings.surgeryDate);
 
-    while (true) {
+    // If it's today, start checking from yesterday
+    if (entryDates.has(todayStr)) {
+      checkDate.setDate(checkDate.getDate() - 1);
+    } else {
+      checkDate.setDate(checkDate.getDate() - 1);
+    }
+
+    while (checkDate >= surgeryDate) {
       const dateStr = checkDate.toISOString().split("T")[0];
-      if (!entryDates.has(dateStr) || checkDate < surgeryDate) {
+      if (!entryDates.has(dateStr)) {
         break;
       }
       streak++;
       checkDate.setDate(checkDate.getDate() - 1);
     }
 
+    // Add today's entry to streak if it exists
+    if (entryDates.has(todayStr)) {
+      streak++;
+    }
+
     return { success: true, data: streak };
   });
 }
-
 export async function getPostOpDuration(targetDate = null) {
   return withAuth(async (userId) => {
     const settings = await prisma.userSettings.findUnique({
