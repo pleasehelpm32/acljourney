@@ -1,54 +1,48 @@
-//journal/page.js
 "use client";
 
 import { useState, useEffect } from "react";
 import { Calendar } from "@/components/ui/calendar";
-import StreakCounter from "@/components/journal/StreakCounter";
-import WeekAccordion from "@/components/journal/WeekAccordion";
 import { Button } from "@/components/ui/button";
 import { Plus, Save } from "lucide-react";
 import Link from "next/link";
 import { getJournalWeeks } from "@/utils/actions";
 import { useToast } from "@/hooks/use-toast";
 import {
-  getLocalDate,
+  createSafeDate,
   formatDateForUrl,
-  formatDateForDisplay,
-  formatFullDate,
   isSameDay,
-  getTodayFromUI,
+  getToday,
 } from "@/utils/date";
 
+import StreakCounter from "@/components/journal/StreakCounter";
+import WeekAccordion from "@/components/journal/WeekAccordion";
+
 export default function JournalPage() {
-  const [date, setDate] = useState(getTodayFromUI());
-  const [expandedWeeks, setExpandedWeeks] = useState([]);
-  const [weeks, setWeeks] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [pageState, setPageState] = useState({
+    date: getToday(),
+    expandedWeeks: [],
+    weeks: [],
+    isLoading: true,
+  });
   const { toast } = useToast();
 
-  const today = getTodayFromUI();
+  const today = getToday();
   const formattedToday = formatDateForUrl(today);
 
   useEffect(() => {
     async function loadJournalWeeks() {
       try {
-        setIsLoading(true);
         const result = await getJournalWeeks();
-        console.log("API Response:", result);
 
         if (result.success) {
-          setWeeks(result.data || []);
-          // Only set initial expanded week if no weeks are expanded
-          if (expandedWeeks.length === 0 && result.data?.length > 0) {
-            setExpandedWeeks([result.data[0].id]); // Initialize with an array
-          }
+          setPageState((prev) => ({
+            ...prev,
+            weeks: result.data || [],
+            expandedWeeks: result.data?.length > 0 ? [result.data[0].id] : [],
+            isLoading: false,
+          }));
         } else {
-          console.error("Failed to load weeks:", result.error);
-          toast({
-            title: "Error",
-            description: result.error || "Failed to load journal entries",
-            variant: "destructive",
-          });
+          throw new Error(result.error || "Failed to load journal entries");
         }
       } catch (error) {
         console.error("Component error:", error);
@@ -57,8 +51,7 @@ export default function JournalPage() {
           description: "Unable to load journal entries. Please try again.",
           variant: "destructive",
         });
-      } finally {
-        setIsLoading(false);
+        setPageState((prev) => ({ ...prev, isLoading: false }));
       }
     }
 
@@ -66,39 +59,37 @@ export default function JournalPage() {
   }, [toast]);
 
   const findWeekForDate = (date) => {
-    return weeks.find((week) => {
-      const clickedDate = getLocalDate(date);
-      clickedDate.setHours(0, 0, 0, 0);
-      const startDate = getLocalDate(week.startDate);
-      startDate.setHours(0, 0, 0, 0);
-      const endDate = getLocalDate(week.endDate);
-      endDate.setHours(0, 0, 0, 0);
+    return pageState.weeks.find((week) => {
+      const clickedDate = createSafeDate(date);
+      const startDate = createSafeDate(week.startDate);
+      const endDate = createSafeDate(week.endDate);
 
       return clickedDate >= startDate && clickedDate <= endDate;
     });
-  };
-
-  const handleDateSelect = (newDate) => {
-    setDate(newDate);
-    const selectedWeek = findWeekForDate(newDate);
-    if (selectedWeek) {
-      // Add the selected week's id to expanded weeks if it's not already there
-      setExpandedWeeks((prev) =>
-        prev.includes(selectedWeek.id) ? prev : [...prev, selectedWeek.id]
-      );
-    }
   };
 
   const getEntryStatus = (date) => {
     const week = findWeekForDate(date);
     if (!week) return null;
 
-    const localDate = getLocalDate(date);
-    const dayIndex = localDate.getDay();
-    return week.entries[dayIndex];
+    const localDate = createSafeDate(date);
+    return week.entries[localDate.getDay()];
   };
 
-  if (isLoading) {
+  const handleDateSelect = (newDate) => {
+    if (!newDate) return;
+
+    const selectedWeek = findWeekForDate(newDate);
+    setPageState((prev) => ({
+      ...prev,
+      date: newDate,
+      expandedWeeks: selectedWeek
+        ? [...new Set([...prev.expandedWeeks, selectedWeek.id])]
+        : prev.expandedWeeks,
+    }));
+  };
+
+  if (pageState.isLoading) {
     return (
       <div className="container mx-auto p-4 max-w-3xl flex justify-center items-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-2">
@@ -111,14 +102,10 @@ export default function JournalPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Main container with better mobile padding */}
       <div className="container mx-auto px-4 py-6 md:py-8 max-w-3xl">
-        {/* SEO Heading */}
         <h1 className="sr-only">ACL Journey - Recovery Journal</h1>
 
-        {/* Top Section with Streak and Add Entry */}
         <div className="flex flex-col space-y-6 mb-8">
-          {/* Title Section */}
           <div className="text-center md:text-left">
             <h2 className="text-2xl md:text-3xl font-bold text-darkb mb-2">
               Recovery Journal
@@ -128,9 +115,7 @@ export default function JournalPage() {
             </p>
           </div>
 
-          {/* Streak and Calendar Section */}
           <div className="flex flex-col lg:flex-row justify-between items-center gap-6">
-            {/* Left Column - Streak & Add Entry */}
             <div className="w-full lg:w-auto space-y-4">
               <div className="bg-white rounded-lg p-4 shadow-sm border border-silver_c/20">
                 <h3 className="text-lg font-medium text-darkb mb-3">
@@ -150,11 +135,10 @@ export default function JournalPage() {
               </Link>
             </div>
 
-            {/* Right Column - Calendar */}
             <div className="w-full lg:w-auto">
               <Calendar
                 mode="single"
-                selected={date}
+                selected={pageState.date}
                 onSelect={handleDateSelect}
                 className="rounded-lg border border-silver_c/20 bg-white p-3"
                 modifiersClassNames={{
@@ -174,15 +158,16 @@ export default function JournalPage() {
           </div>
         </div>
 
-        {/* Weekly Entries Section */}
         <div className="space-y-4">
           <h3 className="text-xl font-semibold text-darkb text-center md:text-left">
             Weekly Entries
           </h3>
           <WeekAccordion
-            weeks={weeks}
-            expandedWeek={expandedWeeks}
-            setExpandedWeek={setExpandedWeeks}
+            weeks={pageState.weeks}
+            expandedWeek={pageState.expandedWeeks}
+            setExpandedWeek={(weeks) =>
+              setPageState((prev) => ({ ...prev, expandedWeeks: weeks }))
+            }
             currentDate={today}
           />
         </div>

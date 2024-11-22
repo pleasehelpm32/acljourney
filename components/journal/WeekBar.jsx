@@ -2,28 +2,17 @@
 import { CheckCircle, XCircle, Circle, MinusCircle } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import {
-  getLocalDate,
-  formatDateForUrl,
-  formatDateForDisplay,
-} from "@/utils/date";
+import { formatDateForUrl } from "@/utils/date";
 
 export default function WeekBar({ entries, startDate, currentDate }) {
   const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-  const weekStartDate = new Date(startDate);
-  weekStartDate.setDate(weekStartDate.getDate() + 1);
-  weekStartDate.setHours(12, 0, 0, 0);
-  const today = new Date();
-  today.setHours(12, 0, 0, 0);
-
-  // Now just add days from Sunday
   const weekDates = daysOfWeek.map((_, index) => {
-    const date = new Date(weekStartDate);
-    date.setDate(weekStartDate.getDate() + index);
+    const date = new Date(startDate);
+    date.setDate(startDate.getDate() + index);
+    date.setHours(12, 0, 0, 0);
     return date;
   });
-
   const getStatusClasses = (status, isActive) => {
     const baseClasses = "transition-all duration-200 ease-in-out";
 
@@ -102,17 +91,15 @@ export default function WeekBar({ entries, startDate, currentDate }) {
     <div className="flex justify-between gap-2 my-6 px-2">
       {daysOfWeek.map((day, index) => {
         const status = entries?.[index];
-
         const currentDateForDay = weekDates[index];
-
         const isActive =
-          formatDateForUrl(currentDateForDay) === formatDateForUrl(today);
+          formatDateForUrl(currentDateForDay) === formatDateForUrl(currentDate);
 
         const isClickable =
           status === "completed" || status === "missed" || isActive;
 
         const dayContent = (
-          <div className="flex flex-col items-center gap-2">
+          <div key={day} className="flex flex-col items-center gap-2">
             <span
               className={cn(
                 "text-sm font-medium",
@@ -132,19 +119,15 @@ export default function WeekBar({ entries, startDate, currentDate }) {
           </div>
         );
 
-        return (
-          <div
-            key={day}
-            className={cn("relative group", isClickable && "hover:z-10")}
+        return isClickable ? (
+          <Link
+            key={`link-${day}`}
+            href={`/journal/${formatDateForUrl(currentDateForDay)}`}
           >
-            {isClickable ? (
-              <Link href={`/journal/${formatDateForUrl(currentDateForDay)}`}>
-                {dayContent}
-              </Link>
-            ) : (
-              dayContent
-            )}
-          </div>
+            {dayContent}
+          </Link>
+        ) : (
+          <div key={`div-${day}`}>{dayContent}</div>
         );
       })}
     </div>

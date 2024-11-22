@@ -1,24 +1,31 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import SurgeryDate from "@/components/SurgeryDate";
+
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Loader2, Save } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { createUpdateSettings, getSettings } from "@/utils/actions";
+
+// Your existing components
+import SurgeryDate from "@/components/SurgeryDate";
 import KneeSelector from "@/components/KneeSelector";
 import GraftTypeSelect from "@/components/GraftTypeSelect";
 import WeightBearingStatus from "@/components/WeightBearingStatus";
 import ProfileForm from "@/components/ProfileForm";
-import { Button } from "@/components/ui/button";
-import { createUpdateSettings, getSettings } from "@/utils/actions";
-import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save } from "lucide-react";
+
+const DEFAULT_STATE = {
+  surgeryDate: null,
+  knee: null,
+  graftType: null,
+  weightBearing: null,
+  favoriteSport: "",
+  about: "",
+};
 
 export default function SettingsPage() {
-  const [surgeryDate, setSurgeryDate] = useState(null);
-  const [knee, setKnee] = useState(null);
-  const [graftType, setGraftType] = useState(null);
-  const [weightBearing, setWeightBearing] = useState(null);
-  const [favoriteSport, setFavoriteSport] = useState("");
-  const [about, setAbout] = useState("");
+  const [formData, setFormData] = useState(DEFAULT_STATE);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
@@ -28,15 +35,16 @@ export default function SettingsPage() {
       try {
         const result = await getSettings();
         if (result.success && result.data) {
-          const settings = result.data;
-          setSurgeryDate(
-            settings.surgeryDate ? new Date(settings.surgeryDate) : null
-          );
-          setKnee(settings.knee || null);
-          setGraftType(settings.graftType || null);
-          setWeightBearing(settings.weightBearing || null);
-          setFavoriteSport(settings.favoriteSport || "");
-          setAbout(settings.about || "");
+          setFormData({
+            surgeryDate: result.data.surgeryDate
+              ? new Date(result.data.surgeryDate)
+              : null,
+            knee: result.data.knee || null,
+            graftType: result.data.graftType || null,
+            weightBearing: result.data.weightBearing || null,
+            favoriteSport: result.data.favoriteSport || "",
+            about: result.data.about || "",
+          });
         }
       } catch (error) {
         toast({
@@ -54,44 +62,27 @@ export default function SettingsPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.surgeryDate) {
+      toast({
+        title: "Required Field Missing",
+        description: "Please select your surgery date",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
-
     try {
-      if (!surgeryDate) {
-        toast({
-          title: "Required Field Missing",
-          description: "Please select your surgery date",
-          variant: "destructive",
-        });
-        setIsSubmitting(false);
-        return;
-      }
-
-      const formData = {
-        surgeryDate: surgeryDate,
-        knee: knee || "right",
-        graftType: graftType || "patellar",
-        weightBearing: weightBearing || "weight-bearing",
-        favoriteSport: favoriteSport?.trim() || null,
-        about: about?.trim() || null,
-      };
-
       const result = await createUpdateSettings(formData);
-
-      if (!result) {
-        throw new Error("No response from server");
-      }
-
-      if (result.success) {
+      if (result?.success) {
         toast({
           title: "Settings saved",
           description: "Your profile has been updated successfully.",
         });
       } else {
-        throw new Error(result.error || "Failed to save settings");
+        throw new Error(result?.error || "Failed to save settings");
       }
     } catch (error) {
-      console.error("Settings submission error:", error);
       toast({
         title: "Error",
         description:
@@ -117,10 +108,8 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-6 md:py-8 max-w-3xl">
-        {/* SEO Heading */}
         <h1 className="sr-only">ACL Journey - Profile Settings</h1>
 
-        {/* Title Section */}
         <div className="text-center md:text-left mb-8">
           <h2 className="text-2xl md:text-3xl font-bold text-darkb mb-2">
             Profile Settings
@@ -131,7 +120,6 @@ export default function SettingsPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Surgery Details Card */}
           <Card className="border-silver_c/20">
             <CardHeader>
               <CardTitle className="text-lg font-medium text-darkb flex justify-between items-center">
@@ -143,23 +131,35 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               <SurgeryDate
-                value={surgeryDate}
-                onChange={setSurgeryDate}
-                required
+                value={formData.surgeryDate}
+                onChange={(date) =>
+                  setFormData((prev) => ({ ...prev, surgeryDate: date }))
+                }
               />
               <Separator className="bg-silver_c/20" />
-              <KneeSelector value={knee} onChange={setKnee} />
+              <KneeSelector
+                value={formData.knee}
+                onChange={(value) =>
+                  setFormData((prev) => ({ ...prev, knee: value }))
+                }
+              />
               <Separator className="bg-silver_c/20" />
-              <GraftTypeSelect value={graftType} onChange={setGraftType} />
+              <GraftTypeSelect
+                value={formData.graftType}
+                onChange={(value) =>
+                  setFormData((prev) => ({ ...prev, graftType: value }))
+                }
+              />
               <Separator className="bg-silver_c/20" />
               <WeightBearingStatus
-                value={weightBearing}
-                onChange={setWeightBearing}
+                value={formData.weightBearing}
+                onChange={(value) =>
+                  setFormData((prev) => ({ ...prev, weightBearing: value }))
+                }
               />
             </CardContent>
           </Card>
 
-          {/* Personal Details Card */}
           <Card className="border-silver_c/20">
             <CardHeader>
               <CardTitle className="text-lg font-medium text-darkb">
@@ -168,15 +168,18 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               <ProfileForm
-                favoriteSport={favoriteSport}
-                about={about}
-                onSportChange={setFavoriteSport}
-                onAboutChange={setAbout}
+                favoriteSport={formData.favoriteSport}
+                about={formData.about}
+                onSportChange={(value) =>
+                  setFormData((prev) => ({ ...prev, favoriteSport: value }))
+                }
+                onAboutChange={(value) =>
+                  setFormData((prev) => ({ ...prev, about: value }))
+                }
               />
             </CardContent>
           </Card>
 
-          {/* Save Button */}
           <Button
             type="submit"
             className="w-full bg-silver_c text-black hover:bg-black hover:text-cream transition-all py-6"

@@ -8,7 +8,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import WeekBar from "./WeekBar";
-import { getLocalDate } from "@/utils/date";
+import { createSafeDate } from "@/utils/date";
 
 export default function WeekAccordion({
   weeks,
@@ -23,7 +23,7 @@ export default function WeekAccordion({
       onValueChange={setExpandedWeek}
     >
       {weeks.map((week) => {
-        const startDate = getLocalDate(week.startDate);
+        const startDate = createSafeDate(week.startDate);
 
         return (
           <AccordionItem key={week.id} value={week.id}>
