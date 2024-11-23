@@ -9,7 +9,6 @@ import {
   Newspaper,
   Loader2,
 } from "lucide-react";
-
 const MediumArticlesCarousel = () => {
   const [articles, setArticles] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -20,11 +19,26 @@ const MediumArticlesCarousel = () => {
     const fetchArticles = async () => {
       try {
         const response = await fetch("/api/medium-articles");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const text = await response.text();
+
+        // Debug log
+        console.log("RSS Feed response:", text);
+
         const parser = new DOMParser();
         const xml = parser.parseFromString(text, "text/xml");
 
-        const items = Array.from(xml.querySelectorAll("item"))
+        // Debug log
+        console.log("Parsed XML:", xml);
+
+        const items = Array.from(xml.querySelectorAll("item"));
+
+        // Debug log
+        console.log("Found items:", items.length);
+
+        const processedItems = items
           .map((item) => {
             const titleElement = item.querySelector("title");
             const linkElement = item.querySelector("link");
@@ -33,6 +47,12 @@ const MediumArticlesCarousel = () => {
               item.querySelector("encoded");
             const pubDateElement = item.querySelector("pubDate");
 
+            // Debug log
+            console.log("Processing item:", {
+              title: titleElement?.textContent,
+              link: linkElement?.textContent,
+            });
+
             if (!titleElement?.textContent || !linkElement?.textContent) {
               return null;
             }
@@ -40,16 +60,16 @@ const MediumArticlesCarousel = () => {
             // Extract a short excerpt from the content
             const excerpt =
               contentElement?.textContent
-                .replace(/<!\[CDATA\[|\]\]>/g, "")
-                .replace(/<[^>]*>/g, "")
-                .slice(0, 150) + "...";
+                ?.replace(/<!\[CDATA\[|\]\]>/g, "")
+                ?.replace(/<[^>]*>/g, "")
+                ?.slice(0, 150) + "...";
 
             return {
               title: titleElement.textContent
                 .replace(/<!\[CDATA\[|\]\]>/g, "")
                 .trim(),
               link: linkElement.textContent.trim(),
-              excerpt: excerpt,
+              excerpt: excerpt || "No excerpt available",
               pubDate: pubDateElement
                 ? new Date(pubDateElement.textContent).toLocaleDateString()
                 : "No date",
@@ -57,15 +77,20 @@ const MediumArticlesCarousel = () => {
           })
           .filter(Boolean);
 
-        if (items.length === 0) {
+        // Debug log
+        console.log("Processed items:", processedItems);
+
+        if (processedItems.length === 0) {
           throw new Error("No valid articles found");
         }
 
-        setArticles(items);
+        setArticles(processedItems);
         setError(null);
       } catch (error) {
         console.error("Error fetching Medium articles:", error);
-        setError("Failed to load articles. Please try again later.");
+        setError(
+          error.message || "Failed to load articles. Please try again later."
+        );
       } finally {
         setIsLoading(false);
       }

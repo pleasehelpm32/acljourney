@@ -1,97 +1,120 @@
 "use client";
-
-import { useEffect, useState } from "react";
-import PostOpStats from "@/components/PostOpStats";
-import StreakCounter from "@/components/journal/StreakCounter";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import Link from "next/link";
+import React from "react";
 import MediumArticlesCarousel from "@/components/MediumArticlesCarousel";
-import { Plus, BarChart3 } from "lucide-react";
-import TodaysGamePlan from "@/components/TodaysGamePlan";
-import { PageContainer } from "@/components/common/PageContainer";
-import { LoadingState } from "@/components/common/LoadingState";
+import { ArrowRight } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
-import { formatDateForUrl } from "@/utils/date";
-
-export default function HomePage() {
-  const [isLoading, setIsLoading] = useState(true);
-  const today = new Date();
-  const formattedToday = formatDateForUrl(today);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (isLoading) {
-    return <LoadingState text="Loading dashboard..." />;
-  }
-
+export default function Page() {
   return (
-    <PageContainer
-      title="Recovery Dashboard"
-      subtitle="Track your ACL recovery progress"
-    >
-      <div className="space-y-8 md:space-y-12">
-        {/* Stats Section */}
-        <div className="w-full bg-cream rounded-3xl shadow-lg border-4 border-darkb/30 p-6 md:p-8">
-          <PostOpStats />
+    <div className="container mx-auto px-4 py-6 md:py-8 max-w-4xl space-y-12">
+      {/* Hero Section */}
+      <div className="text-center space-y-6">
+        <h1 className="text-4xl md:text-5xl font-bold text-darkb">
+          ACL Journey
+        </h1>
+        <p className="text-xl text-silver_c max-w-2xl mx-auto">
+          Your companion through ACL recovery. Track progress, share
+          experiences, and stay motivated on your path to healing.
+        </p>
+        <div className="flex justify-center gap-4">
+          <Link href="/journal">
+            <Button className="bg-silver_c text-black hover:bg-black hover:text-cream transition-all py-6 px-8">
+              Start Your Journey
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
         </div>
+      </div>
 
-        <TodaysGamePlan />
+      {/* Story Section */}
+      <div className="space-y-2">
+        <h2 className="text-3xl md:text-4xl font-bold text-darkb">My Story</h2>
+        <div className="prose prose-lg max-w-none">
+          <div className="bg-white rounded-xl shadow-md p-6 md:p-8 space-y-6">
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-darkb">
+                Sup, I'm Josh.
+              </h3>
+              <p className="text-black/80">
+                I really didn’t anticipate tearing my ACL, but I guess worse
+                things could have happened. To this day, I’m still shocked. I
+                play basketball casually, hooping a few times a week alongside
+                lifting weights. I’d heard of ACL tears, but mostly in
+                professional athletes, so I never thought it could happen to me.
+                I’ve had my share of ankle sprains and minor injuries, but
+                tearing my ACL felt like something out of my league. So, when I
+                heard a pop as I came down from a rebound, I honestly didn’t
+                think much of it. But boy, was I wrong.
+              </p>
 
-        {/* Journal Section */}
-        <div className="space-y-4">
-          <h2 className="text-2xl md:text-3xl font-bold text-darkb">
-            Journal Tracking
-          </h2>
-
-          <div className="bg-white rounded-xl shadow-md p-6 md:p-8">
-            <div className="space-y-6">
-              {/* Streak and Progress Button */}
-              <div className="flex flex-col md:flex-row items-center gap-4 md:justify-between">
-                <div className="space-y-1 text-center md:text-left w-full md:w-auto">
-                  <h4 className="text-sm font-medium text-darkb">Streak</h4>
-                  <StreakCounter />
-                </div>
-                <Link href="/journal" className="w-full md:w-auto">
-                  <Button
-                    variant="outline"
-                    className="w-full md:w-auto text-black hover:bg-black hover:text-cream border-silver_c/20 transition-all"
-                    size="sm"
-                  >
-                    <BarChart3 className="h-4 w-4 mr-2" />
-                    See Progress
-                  </Button>
-                </Link>
-              </div>
-
-              {/* Add Entry Button */}
-              <Link href={`/journal/${formattedToday}`} className="block">
-                <Button
-                  className="w-full text-sm md:text-base py-6 bg-silver_c text-black hover:bg-black hover:text-cream transition-all"
-                  size="lg"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Journal Entry ({formattedToday})
-                </Button>
-              </Link>
+              <p className="text-black/80">
+                At first, I was in denial—hoping for the best-case scenario. But
+                after seeing my physio and getting the scans, there was no
+                denying it anymore. I kept asking, “Why me?” It didn’t make
+                sense—I was just playing for fun and I took care of my body.
+                Eventually, though, I accepted it and started planning for
+                surgery. A part of me considered not going through with it, but
+                the uncertainty of that path, along with stories of people
+                worsening their situation by avoiding surgery, pushed me toward
+                getting it done.
+              </p>
+              <p className="text-black/80">
+                As I write this, I’m about 70 days post-surgery and feeling
+                pretty great (for now)! Looking back, I’m glad I delayed surgery
+                until after the summer. It gave me time to focus on prehab,
+                which I now recommend to everyone. Prehab was a huge factor in
+                my early success with physio. Plus, it allowed me to enjoy life
+                a bit—like experiencing surfing with one ACL (something I hope
+                never to do again).
+              </p>
+              <p className="text-black/80">
+                Two things have really helped me through this process. The first
+                was mentally preparing myself for the long, 365-day journey
+                ahead. I know some people are back to sports in 9 months, but
+                why rush? Accepting a longer timeline has helped me manage
+                expectations, avoid disappointment, and give my body the time it
+                needs to truly heal. The second thing has been journaling,
+                something I only started after the injury. There are so many
+                emotions that come with this journey. Some days, I’ve found
+                myself crying in bed, and other days, I’m fired up about an
+                exercise I crushed at the gym. It’s a rollercoaster, and
+                journaling has been my anchor—an outlet for all those thoughts
+                and emotions that no one else can fully understand.
+              </p>
+              <p className="text-black/80">
+                People often think that after a few months of recovery, you’re
+                back to normal. They haven’t been through it, so they don’t
+                know—and that’s okay. But journaling has been a way for me to be
+                truly honest with myself. It’s allowed me to track my progress,
+                re-read my thoughts on both good and bad days, and keep
+                everything in perspective. This journey, while long, is filled
+                with small wins and valuable moments, and focusing on those has
+                made me a more grateful person.
+              </p>
+              <p className="text-black/80 font-medium">
+                That’s why I created this site—a place for you to journal and
+                let your emotions out. During my time off post-surgery, I dove
+                deeper into coding, and this site became my baby. It’s far from
+                perfect, but just like the ACL journey, I’m taking it one day at
+                a time, and I know it’ll get better. I hope this site helps you
+                through your journey, and I truly wish you the best. Godspeed,
+                and good luck to everyone on the journey to recovery!
+              </p>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Latest Articles Section */}
-        <div className="space-y-4">
-          <h2 className="text-2xl md:text-3xl font-bold text-darkb">
-            Latest Articles
-          </h2>
-
-          <div className="bg-white rounded-xl shadow-md p-4 md:p-6">
-            <MediumArticlesCarousel />
-          </div>
+      {/* Latest Articles Section */}
+      <div className="space-y-2">
+        <h2 className="text-2xl md:text-3xl font-bold text-darkb">
+          Latest Articles
+        </h2>
+        <div className="bg-white rounded-xl shadow-md p-4 md:p-6">
+          <MediumArticlesCarousel />
         </div>
       </div>
-    </PageContainer>
+    </div>
   );
 }
