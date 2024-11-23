@@ -21,9 +21,27 @@ const geistMono = localFont({
 });
 
 export const metadata = {
-  title: "ACL Journey",
+  metadataBase: new URL("https://www.acljourney.com"),
+  title: {
+    default: "ACL Journey - ACL Recovery Tracking & Support",
+    template: "%s | ACL Journey",
+  },
   description:
-    "Recovery tool to help you after ACL reconstruction surgery. A daily journal to help you monitor progress and stay on top of the recovery process.",
+    "Recovery tool to help you after ACL reconstruction surgery. Track your daily progress, journal your rehabilitation journey, and connect with others recovering from ACL surgery.",
+  keywords: [
+    "ACL recovery",
+    "ACL surgery",
+    "ACL rehabilitation",
+    "ACL journal",
+    "ACL tear",
+    "knee surgery recovery",
+    "ACL reconstruction",
+    "ACL tracking",
+    "rehabilitation journal",
+    "recovery progress",
+  ],
+  authors: [{ name: "Josh" }],
+  creator: "Josh",
   icons: {
     icon: [
       { url: "/icon_crop/favicon.ico" },
@@ -54,8 +72,46 @@ export const metadata = {
     ],
   },
   manifest: "/icon_crop/site.webmanifest",
-};
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://www.acljourney.com",
+    siteName: "ACL Journey",
+    title: "ACL Journey - Track Your Recovery Progress",
+    description:
+      "Comprehensive ACL recovery tracking tool with daily journaling, progress monitoring, and rehabilitation support.",
+    images: [
+      {
+        url: "/icon_crop/android-chrome-512x512.png",
+        width: 512,
+        height: 512,
+        alt: "ACL Journey Logo",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ACL Journey - Recovery Tracking & Support",
+    description:
+      "Track your ACL recovery journey with our specialized tools and support system.",
+    images: ["/icon_crop/android-chrome-512x512.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
 
+  verification: {
+    google: "0jmAbgeSViPTuokI1N94E5UkXu-x9gToZW-W0yrAzXM",
+  },
+};
 export default function RootLayout({ children }) {
   return (
     <ClerkProvider dynamic>
@@ -106,6 +162,23 @@ export default function RootLayout({ children }) {
                   y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
                 })(window, document, "clarity", "script", "${process.env.NEXT_PUBLIC_CLARITY_ID}");
               `,
+            }}
+          />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "WebSite",
+                name: "ACL Journey",
+                url: "https://www.acljourney.com",
+                description: "ACL recovery tracking and support platform",
+                author: {
+                  "@type": "Person",
+                  name: "Josh",
+                },
+                keywords: "ACL recovery, ACL surgery, rehabilitation",
+              }),
             }}
           />
         </head>
