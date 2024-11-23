@@ -29,7 +29,23 @@ export default function Page() {
 
       {/* Story Section */}
       <div className="space-y-2">
-        <h2 className="text-3xl md:text-4xl font-bold text-darkb">My Story</h2>
+        <h2 className="text-3xl md:text-4xl font-bold text-darkb mb-4">
+          My Story
+        </h2>
+        <div className="space-y-4">
+          <div className="aspect-w-16 aspect-h-9 rounded-xl overflow-hidden shadow-md mb-4">
+            <video controls className="w-full h-full object-cover" playsInline>
+              <source src="/videos/acltearbasketball.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+
+          {/* Video description */}
+          <p className="text-sm text-silver_c text-center italic">
+            How I Tore My ACL - Coming down from a rebound during a men's league
+            basketball game
+          </p>
+        </div>
         <div className="prose prose-lg max-w-none">
           <div className="bg-white rounded-xl shadow-md p-6 md:p-8 space-y-6">
             <div className="space-y-4">
