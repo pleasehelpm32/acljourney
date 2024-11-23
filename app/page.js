@@ -118,6 +118,14 @@ export default function Page() {
                 and good luck to everyone on the journey to recovery!
               </p>
             </div>
+            <div className="flex justify-center gap-4">
+              <Link href="/dashboard">
+                <Button className="bg-silver_c text-black hover:bg-black hover:text-cream transition-all py-6 px-8">
+                  View Dashboard
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -128,6 +136,9 @@ export default function Page() {
           Latest Articles
         </h2>
         <div className="bg-white rounded-xl shadow-md p-4 md:p-6">
+          <p className="font-medium text-black/80">
+            I like to recap my weeks too, check out the articles!
+          </p>
           <MediumArticlesCarousel />
         </div>
       </div>
