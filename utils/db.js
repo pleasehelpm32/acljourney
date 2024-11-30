@@ -11,11 +11,8 @@ const prismaClientSingleton = () => {
   });
 };
 
-type PrismaClientSingleton = ReturnType<typeof prismaClientSingleton>;
-
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClientSingleton | undefined;
-};
+// Create a global object for Prisma
+const globalForPrisma = global;
 
 // Use the singleton pattern to ensure the client is reused in development
 const prisma = globalForPrisma.prisma ?? prismaClientSingleton();

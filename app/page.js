@@ -17,7 +17,23 @@ export default function Page() {
           Your companion through ACL recovery. Track progress, share
           experiences, and stay motivated on your path to healing.
         </p>
-        <div className="flex justify-center gap-4">
+        {/* Mobile: Stack buttons vertically */}
+        <div className="flex flex-col md:hidden space-y-4">
+          <Link href="/journal" className="w-full">
+            <Button className="w-full bg-silver_c text-black hover:bg-black hover:text-cream transition-all py-6 px-8">
+              Start Your Journey
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
+          <Link href="/dashboard" className="w-full">
+            <Button className="w-full bg-darkb text-cream hover:bg-black hover:text-cream transition-all py-6 px-8">
+              View Dashboard
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
+        {/* Desktop: Single button */}
+        <div className="hidden md:flex justify-center gap-4">
           <Link href="/journal">
             <Button className="bg-silver_c text-black hover:bg-black hover:text-cream transition-all py-6 px-8">
               Start Your Journey

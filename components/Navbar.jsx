@@ -125,6 +125,14 @@ export default function Navbar() {
                 >
                   Journal
                 </Link>
+                {isSignedIn && (
+                  <Link
+                    href="/dashboard"
+                    className="text-lg font-medium text-darkb hover:text-silver_d transition-colors"
+                  >
+                    Dashboard
+                  </Link>
+                )}
                 <Link
                   href="/settings"
                   className="flex items-center gap-2 text-lg font-medium text-darkb hover:text-silver_d transition-colors"
