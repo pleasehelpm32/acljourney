@@ -1,23 +1,17 @@
 import { auth } from "@clerk/nextjs/server";
+import { ActionResponse } from "@/types/actions";
 
-type AuthCallback<T> = (userId: string) => Promise<T>;
-
-type AuthResponse<T> = {
-  success: boolean;
-  data?: T;
-  error?: string;
-};
+type AuthCallback<T> = (userId: string) => Promise<ActionResponse<T>>;
 
 export async function withAuth<T>(
   callback: AuthCallback<T>
-): Promise<AuthResponse<T>> {
+): Promise<ActionResponse<T>> {
   try {
     const session = await auth();
     if (!session?.userId) {
-      throw new Error("Unauthorized");
+      return { success: false, error: "Unauthorized" };
     }
-    const result = await callback(session.userId);
-    return { success: true, data: result };
+    return await callback(session.userId);
   } catch (error) {
     console.error("Operation failed:", error);
     return {
